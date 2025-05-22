@@ -1,0 +1,42 @@
+User 
+- Login 
+- Register
+- Logout
+- Forgot Password
+- Edit Profile (change Credit - update data - change password)
+- Get all users
+
+Admin
+- User
+- Product
+- Order
+
+Product
+- Add Product
+- Delete Product
+- update product
+- view product
+- Get all Products
+- filteration & Sorting & Pagination & Search
+
+Order
+- cancel order
+- accept order (by system "mandatory" or by admin "optional")
+- Get all orders
+- Checkout (make order)
+
+Cart
+- add to cart
+- remove from cart
+- clear cart
+- increase item quantity
+- decrease item quantity
+----------------------------------------------------------------------------
+
+Endpoints
+---------
+https://claude.ai/public/artifacts/9c9873a6-a645-490c-a659-dff1aab19d6d
+
+Tasks Division
+--------------
+https://claude.ai/public/artifacts/a14b9522-6759-4ff9-a572-4423b006026a

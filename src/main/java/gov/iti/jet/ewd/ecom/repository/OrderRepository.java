@@ -1,4 +1,4 @@
 package gov.iti.jet.ewd.ecom.repository;
 
-public interface UserRepository {
+public interface OrderRepository {
 }

@@ -51,6 +51,19 @@
 
 
 
+//@Bean
+//public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//    http
+//            .csrf().disable() // Disable CSRF (especially for REST APIs)
+//            .authorizeHttpRequests(auth -> auth
+//                    .anyRequest().permitAll() // Allow all requests
+//            );
+//
+//    return http.build();
+//}
+
+
+
 // user authentication for our site
 //    @Bean
 //    public UserDetailsService userDetailsService() {

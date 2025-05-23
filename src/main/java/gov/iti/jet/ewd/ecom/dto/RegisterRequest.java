@@ -9,5 +9,6 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String phone;
+    // add the remaining fields
 
 }

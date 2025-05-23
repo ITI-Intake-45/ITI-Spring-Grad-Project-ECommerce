@@ -49,7 +49,7 @@ https://claude.ai/public/artifacts/1761869e-91bb-4ec0-90c2-e66a517a6809
 https://claude.ai/public/artifacts/39ca78ca-2401-48f1-95ef-6ec994fbad5b
 
 
-
+gpt user auth :: https://chatgpt.com/share/68306e3d-2360-8005-b0af-6fcac8acf578
 ///////////////////////////////////
 https://github.com/ahmedhassanhashem/ITI-Spring-Grad-Project-ECommerce
 https://trello.com/b/OKDo8DrO/itigraduationproject

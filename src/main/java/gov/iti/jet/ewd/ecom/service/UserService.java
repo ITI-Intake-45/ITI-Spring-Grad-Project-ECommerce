@@ -10,7 +10,7 @@ public interface UserService {
     public User getUserById(int userId) ;
     public List<User> getAllUsers();
     public User authenticateUser(String email, String password);
-    public User registerUser(User user);
+    User createUser(User user);
     public void forgotPassword(String email);
 
    // public User updateUserProfile(int userId, UserProfileDto profileDto) ;

@@ -35,10 +35,10 @@ public class Product {
     @Column(name = "price", nullable = false)
     private double price;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
     private ProductCategory category;
+
 
     @NonNull
     @Column(nullable = false)

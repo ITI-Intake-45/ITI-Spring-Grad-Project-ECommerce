@@ -19,8 +19,8 @@ import org.hibernate.validator.constraints.Length;
 @RequiredArgsConstructor
 //make conflict
 //@Data
-@ToString(exclude = {"orders", "cart", "wishlist"})
-@EqualsAndHashCode(exclude = {"orders", "cart", "wishlist"})
+@ToString(exclude = {"orders", "cart"})
+@EqualsAndHashCode(exclude = {"orders", "cart"})
 @Entity
 @Table(name = "users", indexes = {
         @Index(columnList = "email"),
@@ -61,9 +61,6 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private Cart cart;
-
-    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
-    private Wishlist wishlist;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();

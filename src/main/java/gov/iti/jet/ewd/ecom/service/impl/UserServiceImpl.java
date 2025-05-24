@@ -1,31 +1,45 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.entity.Cart;
 import gov.iti.jet.ewd.ecom.entity.User;
-import gov.iti.jet.ewd.ecom.exception.UserAlreadyExistException;
+import gov.iti.jet.ewd.ecom.exception.EmailAlreadyExistsException;
 import gov.iti.jet.ewd.ecom.exception.UserNotFoundException;
 import gov.iti.jet.ewd.ecom.repository.UserRepository;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private EmailServiceImpl emailServiceImpl;
+ //   private final PasswordEncoder passwordEncoder;
+
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-
     @Override
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new UserAlreadyExistException("User with email already exists");
+            throw new EmailAlreadyExistsException("User with email '" + user.getEmail() + "' already exists");
+
         }
+        // we need to Hash the password
+        user.setPassword(user.getPassword());
+
+        // Initialize cart with bidirectional relationship
+        Cart cart = new Cart();
+        cart.setUser(user);
+        user.setCart(cart);
         return userRepository.save(user);
     }
 
@@ -40,13 +54,29 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-
     @Override
     public User getUserByEmail(String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserByEmail'");
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
+    @Override
+    public boolean emailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new UserNotFoundException("email: " + email + " does not exist");
+        }
+        // Generate a temporary password reset token
+        String resetToken = UUID.randomUUID().toString();
+
+        // Send resetToken via email to the user
+        emailServiceImpl.sendPasswordResetEmail(email, resetToken);
+
+    }
 
     @Override
     public User authenticateUser(String email, String password) {
@@ -55,18 +85,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void forgotPassword(String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'forgotPassword'");
-    }
-
-
-    @Override
     public void resetPassword(String resetToken, String newPassword) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'resetPassword'");
     }
-
 
     @Override
     public User changeBalance(int userId, double amount) {
@@ -74,17 +96,9 @@ public class UserServiceImpl implements UserService {
         throw new UnsupportedOperationException("Unimplemented method 'changeBalance'");
     }
 
-
     @Override
     public void verifyEmail(String verificationToken) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'verifyEmail'");
-    }
-
-
-    @Override
-    public boolean emailExists(String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'emailExists'");
     }
 }

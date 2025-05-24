@@ -1,11 +1,16 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
+import gov.iti.jet.ewd.ecom.dto.UserDto;
 import gov.iti.jet.ewd.ecom.entity.Cart;
 import gov.iti.jet.ewd.ecom.entity.User;
 import gov.iti.jet.ewd.ecom.exception.EmailAlreadyExistsException;
+import gov.iti.jet.ewd.ecom.exception.InvalidCredentialsException;
 import gov.iti.jet.ewd.ecom.exception.UserNotFoundException;
+import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.repository.UserRepository;
 import gov.iti.jet.ewd.ecom.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +26,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private EmailServiceImpl emailServiceImpl;
- //   private final PasswordEncoder passwordEncoder;
 
+    /************* Reference to UserMapper************/
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
@@ -105,4 +112,30 @@ public class UserServiceImpl implements UserService {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'verifyEmail'");
     }
+
+    /****************login   /  logout *************************/
+    @Override
+    public UserDto login(LoginRequestDto loginRequestDto, HttpSession session) {
+        User user = userRepository.findByEmail(loginRequestDto.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid Email or Password"));
+
+        if (!BCrypt.checkpw(loginRequestDto.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid Email or Password");
+        }
+
+        UserDto userDto = userMapper.toDTO(user);
+        session.setAttribute("user", userDto);
+        return userDto;
+    }
+
+    @Override
+    public void logout(HttpSession session)
+    {
+        //save cart by id in DB
+
+        // then terminate session
+        session.invalidate();
+    }
+
+
 }

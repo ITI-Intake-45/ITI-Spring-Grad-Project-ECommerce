@@ -42,5 +42,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Modifying
     @Query("UPDATE User u SET u.creditBalance = u.creditBalance - :amount WHERE u.userId = :userId AND u.creditBalance >= :amount")
     int subtractFromBalance(@Param("userId") int userId, @Param("amount") double amount);
+
+
 }
 

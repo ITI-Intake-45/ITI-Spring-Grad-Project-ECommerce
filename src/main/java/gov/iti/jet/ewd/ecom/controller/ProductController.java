@@ -51,7 +51,7 @@ public class ProductController {
         return productService.getProductsByCategoryId(categoryId);
     }
 
-    //http://localhost:8080/products/filter?minPrice=0&maxPrice=200&sortDir=desc&page=1&size=3
+    //http://localhost:8080/api/v1/products/filter?minPrice=0&maxPrice=200&sortDir=desc&page=1&size=3
     @GetMapping("/filter")
     public ResponseEntity<Page<Product>> filterProducts(
             @RequestParam(required = false) String name,

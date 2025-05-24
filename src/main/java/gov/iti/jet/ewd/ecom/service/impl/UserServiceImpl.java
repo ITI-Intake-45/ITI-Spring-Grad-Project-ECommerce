@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -33,8 +35,10 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("User with email '" + user.getEmail() + "' already exists");
 
         }
-        // we need to Hash the password
-        user.setPassword(user.getPassword());
+        // Hash the password
+        String hashedPassword;
+        hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(12));
+        user.setPassword(hashedPassword);
 
         // Initialize cart with bidirectional relationship
         Cart cart = new Cart();

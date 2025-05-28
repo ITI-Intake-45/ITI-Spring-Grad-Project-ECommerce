@@ -12,12 +12,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
   
     //boolean existsByEmail(@NonNull @Email(regexp = ".+@.+\\..+") String email);
 
-
     /* Find a user by email address */
     Optional<User>  findByEmail(String email);
 
     /* Check if a user with the given email exists */
     boolean existsByEmail(String email);
+
+    boolean existsByUserId(int userId);
 
 
     /* Change user's password */

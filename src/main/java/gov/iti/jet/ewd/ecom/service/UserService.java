@@ -19,7 +19,7 @@ public interface UserService {
     public void forgotPassword(String email);
     public void resetPassword(String resetToken, String newPassword);
 
-   public User changeBalance(int userId, double amount) ;
+   public int changeBalance(int userId, double amount) ;
 
    public void verifyEmail(String verificationToken);
    public boolean emailExists(String email);

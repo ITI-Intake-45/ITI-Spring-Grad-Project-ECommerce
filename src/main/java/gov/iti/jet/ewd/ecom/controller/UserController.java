@@ -7,6 +7,7 @@ import gov.iti.jet.ewd.ecom.entity.User;
 import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +45,22 @@ public class UserController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(userDtos);
     }
-
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable int id) {
-        return userService.getUserById(id);
+    public ResponseEntity<UserDto> getUserById(@PathVariable int id) {
+
+        User user =  userService.getUserById(id);
+        return ResponseEntity.ok(userMapper.toDTO(user));
+    }
+
+    @PutMapping("/changeBalance")
+    public ResponseEntity<UserDto> updateBalance(
+            @RequestParam @Min(1) int userId,
+            @RequestParam double amount) {
+
+        if (amount == 0) {
+            throw new IllegalArgumentException("Amount cannot be zero");
+        }
+        userService.changeBalance(userId, amount);
+        return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userId)));
     }
 }

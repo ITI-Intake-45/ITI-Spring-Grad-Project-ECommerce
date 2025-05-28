@@ -1,11 +1,13 @@
 
 package gov.iti.jet.ewd.ecom.controller;
 
+import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.dto.UserDto;
 import gov.iti.jet.ewd.ecom.dto.CreateUserDto;
 import gov.iti.jet.ewd.ecom.entity.User;
 import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -63,4 +65,34 @@ public class UserController {
         userService.changeBalance(userId, amount);
         return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userId)));
     }
+
+    /******************* user Login Api ************************/
+
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpSession session) {
+        UserDto userDto = userService.login(loginRequestDto, session);
+        return ResponseEntity.ok(userDto);
+    }
+
+    /******************* user logout Api ************************/
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpSession session) {
+        userService.logout(session);
+        return ResponseEntity.ok("Logged out successfully.");
+    }
+
+    @GetMapping("/check-session")
+    public ResponseEntity<?> checkSession(HttpSession session) {
+        Object user = session.getAttribute("user");
+        if (user != null) {
+            return ResponseEntity.ok("Session is active. User: " + user.toString());
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No active session.");
+        }
+    }
+
+
+
+
+
 }

@@ -12,6 +12,7 @@ public interface UserMapper {
     /**
      * Convert User entity to UserDto (excludes password for security)
      */
+
     UserDto toDTO(User user);
 
     /**

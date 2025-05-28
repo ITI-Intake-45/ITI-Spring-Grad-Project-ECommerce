@@ -1,14 +1,16 @@
 package gov.iti.jet.ewd.ecom.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class RegisterRequest {
+@Builder
+public class CreateUserDto {
 
     private String name;
     private String email;
     private String password;
+    private String address;
     private String phone;
-    // add the remaining fields
-
+    private double creditBalance;
 }

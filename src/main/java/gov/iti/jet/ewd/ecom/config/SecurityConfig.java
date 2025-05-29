@@ -44,7 +44,12 @@ public class SecurityConfig {
                         .maxSessionsPreventsLogin(false))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register", "/api/v1/users/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register"
+                                , "/api/v1/users/login"
+                                , "/api/v1/users/forgot-password"
+                                , "/api/v1/users/verfiy-otp"
+                                ,"/api/v1/users/reset-password")
+                        .permitAll()
                         .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers("/api/v1/users/check-session").permitAll()

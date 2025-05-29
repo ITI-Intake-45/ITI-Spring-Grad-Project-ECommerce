@@ -1,45 +1,51 @@
-//package gov.iti.jet.ewd.ecom.service.impl;
-//
-//import gov.iti.jet.ewd.ecom.dto.RegisterRequest;
-//import gov.iti.jet.ewd.ecom.entity.Cart;
-//import gov.iti.jet.ewd.ecom.entity.User;
-//import gov.iti.jet.ewd.ecom.repository.CartRepository;
-//import gov.iti.jet.ewd.ecom.repository.UserRepository;
-//import gov.iti.jet.ewd.ecom.service.AuthService;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.stereotype.Service;
-//
-//@Service
-//public class AuthServiceImpl implements AuthService {
-//
-//    private final UserRepository userRepository;
-//    private final CartRepository cartRepository;
-////    private final PasswordEncoder passwordEncoder;
-//
-//    public AuthServiceImpl(UserRepository userRepository, CartRepository cartRepository/*, PasswordEncoder passwordEncoder*/) {
-//        this.userRepository = userRepository;
-//        this.cartRepository = cartRepository;
-////        this.passwordEncoder = passwordEncoder;
-//    }
-//
-//    @Override
-//    public void registerUser(RegisterRequest request) {
-//        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-//            throw new IllegalArgumentException("Email already in use");
-//        }
-//
-//        User user = new User();
-//        user.setEmail(request.getEmail());
-//        user.setName(request.getName());
-//        user.setPassword(/*passwordEncoder.encode(request.getPassword())*/"");
-//        user.setPhone(request.getPhone());
-//        user.setAddress("default address");
-//        user.setCreditBalance(0.0);
-//
-//        user = userRepository.save(user);
-//
-//        Cart cart = new Cart();
-//        cart.setUser(user);
-//        cartRepository.save(cart);
-//    }
-//}
+package gov.iti.jet.ewd.ecom.service;
+
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+@Service
+public class AuthServiceImpl implements AuthService {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public boolean authenticateAdmin(String username, String password, HttpSession session) {
+        // Check if credentials match admin
+        // Note: In production, you should encode the stored password and compare
+        if ("admin".equals(username) && "admin".equals(password)) {
+            // Create Spring Security authentication for admin
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null, // Don't store password
+                            List.of(new GrantedAuthority() {
+                                @Override
+                                public String getAuthority() {
+                                    return "ROLE_ADMIN";
+                                }
+                            })
+                    );
+
+            // Set the authentication in SecurityContext
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            // Store SecurityContext in HTTP session
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext()
+            );
+
+            return true;
+        }
+        return false;
+    }
+}

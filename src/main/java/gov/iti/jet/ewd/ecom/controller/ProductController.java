@@ -5,6 +5,7 @@ import gov.iti.jet.ewd.ecom.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public class ProductController {
     }
 
     @PostMapping
+//    @PreAuthorize("hasRole={'ROLE_ADMIN'}") // to secure and endpoint with role or permission
+//    @PreAuthorize("hasAuthority={'add-product'}") // to secure and endpoint with role or permission
     public Product createProduct(@RequestBody Product product) {
         return productService.createProduct(product);
     }

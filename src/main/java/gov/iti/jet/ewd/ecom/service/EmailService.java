@@ -4,5 +4,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface EmailService {
-    public void sendPasswordResetEmail(String email, String resetToken);
+    public void sendOtpEmail(String email, String otpCode) ;
+
 }

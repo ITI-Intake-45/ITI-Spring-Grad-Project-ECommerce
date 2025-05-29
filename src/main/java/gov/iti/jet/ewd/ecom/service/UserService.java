@@ -15,16 +15,15 @@ public interface UserService {
 
     public List<User> getAllUsers();
 
-    public User authenticateUser(String email, String password);
-
     User createUser(User user);
 
     public void forgotPassword(String email);
-    public void resetPassword(String resetToken, String newPassword);
+    boolean verifyOtp(String email, String otpCode);
+    void resetPassword(String email, String newPassword);
 
-   public int changeBalance(int userId, double amount) ;
 
-   public void verifyEmail(String verificationToken);
+    public int changeBalance(int userId, double amount) ;
+
    public boolean emailExists(String email);
 
     // public User updateUserProfile(int userId, UserProfileDto profileDto) ;
@@ -35,4 +34,4 @@ public interface UserService {
     UserDto login(LoginRequestDto loginRequestDto, HttpSession session);
     void logout(HttpSession session);
 
-    }
+}

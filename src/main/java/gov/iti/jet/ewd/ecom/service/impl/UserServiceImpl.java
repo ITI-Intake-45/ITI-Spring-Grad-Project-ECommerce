@@ -38,13 +38,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository userRepository;
     private final EmailServiceImpl emailServiceImpl;
 
+    private final ConcurrentHashMap<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> otpExpirationTime = new ConcurrentHashMap<>();
+    private static final long OTP_VALIDITY_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+
     @Autowired
     private UserMapper userMapper;
 
-
     @Autowired
     private CartService cartService;
-
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, EmailServiceImpl emailServiceImpl) {
@@ -68,9 +71,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         Cart cart = new Cart();
         cart.setUser(user);
         user.setCart(cart);
-
-        //set token to this user
-        // String token = jwtService.createToken(email, Duration.ofHours(24));
 
         return userRepository.save(user);
     }
@@ -112,30 +112,59 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new UserNotFoundException("email: " + email + " does not exist");
         }
 
-        // Generate a temporary password reset token
-        String resetToken = UUID.randomUUID().toString();
+        // Generate a 6-digit OTP
+        String otpCode = String.format("%06d", new java.util.Random().nextInt(999999));
 
-        // Send resetToken via email to the user
-        emailServiceImpl.sendPasswordResetEmail(email, resetToken);
+        // Store OTP with expiration time
+        otpStorage.put(email, otpCode);
+        otpExpirationTime.put(email, System.currentTimeMillis() + OTP_VALIDITY_DURATION);
 
+        // Send OTP via email
+        emailServiceImpl.sendOtpEmail(email, otpCode);
     }
 
     @Override
-    public void resetPassword(String resetToken, String newPassword) {
+    public boolean verifyOtp(String email, String otpCode) {
+        // Check if OTP exists for the email
+        if (!otpStorage.containsKey(email)) {
+            return false;
+        }
+
+        // Check if OTP has expired
+        if (System.currentTimeMillis() > otpExpirationTime.get(email)) {
+            // Remove expired OTP
+            otpStorage.remove(email);
+            otpExpirationTime.remove(email);
+            return false;
+        }
+
+        // Verify OTP code
+        boolean isValid = otpStorage.get(email).equals(otpCode);
+
+        // If valid, keep the OTP for password reset step
+        // If invalid, return false
+        return isValid;
     }
 
-
     @Override
-    public User authenticateUser(String email, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'authenticateUser'");
-    }
+    public void resetPassword(String email, String newPassword) {
+        // Check if OTP verification was done
+        if (!otpStorage.containsKey(email)) {
+            throw new IllegalStateException("OTP verification not done or expired");
+        }
 
+        User user = getUserByEmail(email);
 
-    @Override
-    public void verifyEmail(String verificationToken) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'verifyEmail'");
+        // Hash the new password
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        user.setPassword(hashedPassword);
+
+        // Save updated user
+        userRepository.save(user);
+
+        // Clear OTP data after successful password reset
+        otpStorage.remove(email);
+        otpExpirationTime.remove(email);
     }
 
     /**************** Updated login with manual authentication *************************/

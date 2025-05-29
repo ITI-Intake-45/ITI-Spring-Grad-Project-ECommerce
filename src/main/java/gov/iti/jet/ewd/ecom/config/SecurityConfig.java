@@ -1,61 +1,55 @@
 package gov.iti.jet.ewd.ecom.config;
 
-//import gov.iti.jet.ewd.ecom.security.JwtAuthenticationFilter;
+import gov.iti.jet.ewd.ecom.repository.UserRepository;
+import gov.iti.jet.ewd.ecom.service.impl.UserServiceImpl;
 import gov.iti.jet.ewd.ecom.security.AuthRole;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    /*
-
-
-/api/v1/categories - all category controller endpoints
-/api/v1/users // get all users endpoint
-/api/v1/orders // get all orders endpoint
-/api/v1/orders/1 // get order endpoint
-/api/v1/products - create - remove - update
-
-
-
-/api/v1/users  //edit
-                 /logout
-                /login
-/api/v1/orders get all orders for that user
-api/v1/orders get order for that user
-api/v1/carts get user cart
-api/v1/orders/{1} post request (checkout order)
-
-
-    * */
+    @Autowired
+    private UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-//                .csrf(csrf ->
-//                        csrf.csrfTokenRepository(CookieCsrfTokenRepository
-//                                .withHttpOnlyFalse()))
+        http
                 .csrf(AbstractHttpConfigurer::disable)
+                // CHANGED: Use session-based authentication instead of stateless
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false))
                 .authorizeHttpRequests(auth -> auth
-                        // Public access
+                        // Public endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register", "/api/v1/users/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login").permitAll()
+                        .requestMatchers("/api/v1/users/check-session").permitAll()
 
-                        // Admin-only access
+                        // Admin-only endpoints
                         .requestMatchers("/api/v1/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("ADMIN")
                         .requestMatchers("/api/v1/orders/**").hasRole("ADMIN")
@@ -63,15 +57,26 @@ api/v1/orders/{1} post request (checkout order)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
 
-                        // Any other requests require authentication
+                        // User endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/logout").authenticated()
+                        .requestMatchers("/api/v1/carts/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").authenticated()
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-                .formLogin(Customizer.withDefaults())
-                .build();
+                .httpBasic(Customizer.withDefaults())
+                .formLogin(AbstractHttpConfigurer::disable); // Disable default form login
+        return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean(name = "inMemoryUserDetailsService")
+    public UserDetailsService inMemoryUserDetailsService() {
         return new InMemoryUserDetailsManager(
                 User.builder()
                         .username("admin")
@@ -81,88 +86,42 @@ api/v1/orders/{1} post request (checkout order)
         );
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    @Bean(name = "jpaUserDetailsService")
+    public UserDetailsService jpaUserDetailsService() {
+        return new UserServiceImpl(userRepository);
     }
-    
 
-//    private final JwtAuthenticationFilter jwtFilter;
-//    private final AuthenticationProvider authenticationProvider;
-//
-//    public SecurityConfig(JwtAuthenticationFilter jwtFilter, AuthenticationProvider authenticationProvider) {
-//        this.jwtFilter = jwtFilter;
-//        this.authenticationProvider = authenticationProvider;
-//    }
-//
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        return http
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .anyRequest().authenticated())
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authenticationProvider(authenticationProvider)
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
-//
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll() // Allow login/register
-//                        .anyRequest().authenticated()
-//                )
-//                .httpBasic(Customizer.withDefaults()); // or .formLogin() if you prefer
-//
-//        return http.build();
-//    }
-//
-//
-//
-//@Bean
-//public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//    http
-//            .csrf().disable() // Disable CSRF (especially for REST APIs)
-//            .authorizeHttpRequests(auth -> auth
-//                    .anyRequest().permitAll() // Allow all requests
-//            );
-//
-//    return http.build();
-//}
-//
-//
-//
-//// user authentication for our site
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        UserDetails user = User.builder()
-//                .username("admin")
-//                .password(passwordEncoder().encode("password"))
-//                .roles("ADMIN")
-//                .build();
-//        return new InMemoryUserDetailsManager(user); // You can replace the InMemoryUserDetailsManager with a
-//        // custom UserDetailsService that loads users from a database using Spring Data JPA.
-//    }
-//
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    //The authenticationProvider bean is now automatically injected into your SecurityConfig.
-//    @Bean
-//    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
-//                                                         PasswordEncoder passwordEncoder) {
-//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-//        authProvider.setUserDetailsService(userDetailsService);
-//        authProvider.setPasswordEncoder(passwordEncoder);
-//        return authProvider;
-//    }
+    // Create separate authentication providers for each UserDetailsService
+    @Bean(name = "inMemoryAuthProvider")
+    public DaoAuthenticationProvider inMemoryAuthProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(inMemoryUserDetailsService());
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
 
+    @Bean(name = "jpaAuthProvider")
+    public DaoAuthenticationProvider jpaAuthProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(jpaUserDetailsService());
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
 
+    // FIXED: Use ProviderManager instead of configureGlobal
+    @Bean
+    @Primary
+    public AuthenticationManager authenticationManager() throws Exception {
+        return new ProviderManager(Arrays.asList(
+                inMemoryAuthProvider(),
+                jpaAuthProvider()
+        ));
+    }
 
+    // REMOVED: The problematic configureGlobal method that caused circular dependency
+    // @Autowired
+    // public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+    //     auth.authenticationProvider(inMemoryAuthProvider())
+    //             .authenticationProvider(jpaAuthProvider());
+    // }
 }

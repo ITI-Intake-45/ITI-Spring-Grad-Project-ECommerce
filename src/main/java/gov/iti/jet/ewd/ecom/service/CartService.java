@@ -21,6 +21,13 @@ public interface CartService {
     public CartDTO loadCartFromDatabase(int userId);
 
 
+    // Checkout operation - clears cart after successful order
+    public void clearCartAfterCheckout(HttpSession session, int userId);
+
     // Helper methods
     public CartDTO createEmptyCart(int userId);
+
+    // Authentication helper
+    public void validateUserSession(HttpSession session);
+
 }

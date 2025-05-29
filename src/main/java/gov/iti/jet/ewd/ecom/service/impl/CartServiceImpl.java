@@ -54,7 +54,19 @@ public class CartServiceImpl implements CartService {
 
 
     @Override
+    public void validateUserSession(HttpSession session) {
+        UserDto user = (UserDto) session.getAttribute("user");
+        if (user == null) {
+            throw new IllegalStateException("User must be logged in to perform cart operations");
+        }
+    }
+
+
+    @Override
     public CartDTO getSessionCart(HttpSession session) {
+        // Validate user is logged in
+        validateUserSession(session);
+
         CartDTO cart = (CartDTO) session.getAttribute(CART_SESSION_KEY);
         if (cart == null) {
             Integer userId = getUserIdFromSession(session);
@@ -66,10 +78,34 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO addToSessionCart(HttpSession session, int productId, int quantity) {
+        // Validate user is logged in
+        validateUserSession(session);
+
         CartDTO cart = getSessionCart(session);
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Check stock availability
+        if (product.getStock() < quantity) {
+            throw new IllegalStateException("Insufficient stock. Available: " + product.getStock() + ", Requested: " + quantity);
+        }
+
+        // Check if product already exists in cart
+        CartItemDTO existingItem = cart.getCartItems().stream()
+                .filter(item -> item.getProductId() == productId)
+                .findFirst()
+                .orElse(null);
+
+        if (existingItem != null) {
+            // Check if total quantity (existing + new) exceeds stock
+            int totalQuantity = existingItem.getQuantity() + quantity;
+            if (totalQuantity > product.getStock()) {
+                throw new IllegalStateException("Cannot add " + quantity + " items. Current cart has " +
+                        existingItem.getQuantity() + ", available stock: " + product.getStock());
+            }
+        }
+
 
         // Create CartItemDTO without cartItemId (session cart)
         CartItemDTO itemDTO = new CartItemDTO(
@@ -87,6 +123,9 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO removeFromSessionCart(HttpSession session, int productId) {
+        // Validate user is logged in
+        validateUserSession(session);
+
         CartDTO cart = getSessionCart(session);
         cart.removeItem(productId);
         session.setAttribute(CART_SESSION_KEY, cart);
@@ -95,18 +134,35 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO updateSessionCartItemQuantity(HttpSession session, int productId, int quantity) {
+        // Validate user is logged in
+        validateUserSession(session);
+
         CartDTO cart = getSessionCart(session);
+
         if (quantity <= 0) {
             cart.removeItem(productId);
         } else {
+            // Check stock availability for update
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            if (product.getStock() < quantity) {
+                throw new IllegalStateException("Cannot update quantity to " + quantity +
+                        ". Available stock: " + product.getStock());
+            }
+
             cart.updateItemQuantity(productId, quantity);
         }
         session.setAttribute(CART_SESSION_KEY, cart);
         return cart;
     }
 
+
     @Override
     public void clearSessionCart(HttpSession session) {
+        // Validate user is logged in
+        validateUserSession(session);
+
         session.removeAttribute(CART_SESSION_KEY);
     }
 
@@ -122,7 +178,7 @@ public class CartServiceImpl implements CartService {
 
         if (sessionCart.getCartItems().isEmpty()) {
             System.out.println("No items to save - clearing existing cart");
-            // Clear existing cart items if session cart is empty
+            // If the session cart is empty, it clears any existing database cart and exits early
             Cart existingCart = cartRepository.findById(userId).orElse(null);
             if (existingCart != null) {
                 existingCart.getItems().clear();
@@ -134,7 +190,7 @@ public class CartServiceImpl implements CartService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Find existing cart or use the one created during user registration
+        // Find an existing cart or use the one created during user registration
         Cart cart = cartRepository.findById(userId).orElse(null);
 
         if (cart == null) {
@@ -150,10 +206,16 @@ public class CartServiceImpl implements CartService {
             System.out.println("Found existing cart, cleared items");
         }
 
-        // Add session cart items to database cart
+        // Add session cart items to database cart with stock validation
         for (CartItemDTO itemDTO : sessionCart.getCartItems()) {
             Product product = productRepository.findById(itemDTO.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemDTO.getProductId()));
+
+            // Final stock check before saving
+            if (product.getStock() < itemDTO.getQuantity()) {
+                throw new IllegalStateException("Insufficient stock for product: " + product.getName() +
+                        ". Available: " + product.getStock() + ", Required: " + itemDTO.getQuantity());
+            }
 
             CartItem cartItem = new CartItem();
             cartItem.setProduct(product);
@@ -163,12 +225,32 @@ public class CartServiceImpl implements CartService {
             cart.addItem(cartItem);
         }
 
+
         cartRepository.save(cart);
         System.out.println("Cart saved successfully with " + cart.getItems().size() + " items");
 
         // Clear session cart after saving
         clearSessionCart(session);
     }
+
+
+    @Override
+    @Modifying
+    @Transactional
+    public void clearCartAfterCheckout(HttpSession session, int userId) {
+        // Clear session cart
+        session.removeAttribute(CART_SESSION_KEY);
+
+        // Clear database cart
+        Cart cart = cartRepository.findById(userId).orElse(null);
+        if (cart != null) {
+            cart.getItems().clear();
+            cartRepository.save(cart);
+            System.out.println("Cart cleared after successful checkout for user: " + userId);
+        }
+    }
+
+
 
     @Override
     public CartDTO loadCartFromDatabase(int userId) {

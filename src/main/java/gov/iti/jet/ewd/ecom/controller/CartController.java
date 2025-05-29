@@ -7,6 +7,7 @@ import gov.iti.jet.ewd.ecom.service.CartService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,67 +32,80 @@ public class CartController {
     }
 
 
-
     // Get the cart from the session.
     @GetMapping
-    public ResponseEntity<CartDTO> getCart(HttpSession session) {
-        CartDTO cart = cartService.getSessionCart(session);
-        return ResponseEntity.ok(cart);
+    public ResponseEntity<?> getCart(HttpSession session) {
+        try {
+            CartDTO cart = cartService.getSessionCart(session);
+            return ResponseEntity.ok(cart);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Authentication required: " + e.getMessage());
+        }
     }
 
-
     @PostMapping("/add")
-    public ResponseEntity<CartDTO> addToCart(
+    public ResponseEntity<?> addToCart(
             @Valid @RequestBody AddToCartRequest request,
             HttpSession session) {
 
-        CartDTO cart = cartService.addToSessionCart(
-                session,
-                request.getProductId(),
-                request.getQuantity());
+        try {
+            CartDTO cart = cartService.addToSessionCart(
+                    session,
+                    request.getProductId(),
+                    request.getQuantity());
 
-        return ResponseEntity.ok(cart);
+            return ResponseEntity.ok(cart);
+        } catch (IllegalStateException e) {
+            if (e.getMessage().contains("logged in")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Authentication required: " + e.getMessage());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Stock error: " + e.getMessage());
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage());
+        }
     }
 
-
     @DeleteMapping("/remove/{productId}")
-    public ResponseEntity<CartDTO> removeFromCart(
+    public ResponseEntity<?> removeFromCart(
             @PathVariable int productId,
             HttpSession session) {
 
-        CartDTO cart = cartService.removeFromSessionCart(session, productId);
-        return ResponseEntity.ok(cart);
+        try {
+            CartDTO cart = cartService.removeFromSessionCart(session, productId);
+            return ResponseEntity.ok(cart);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Authentication required: " + e.getMessage());
+        }
     }
 
-
     @PutMapping("/update/{productId}")
-    public ResponseEntity<CartDTO> updateCartItem(
+    public ResponseEntity<?> updateCartItem(
             @PathVariable int productId,
             @RequestParam int quantity,
             HttpSession session) {
 
-        CartDTO cart = cartService.updateSessionCartItemQuantity(session, productId, quantity);
-        return ResponseEntity.ok(cart);
+        try {
+            CartDTO cart = cartService.updateSessionCartItemQuantity(session, productId, quantity);
+            return ResponseEntity.ok(cart);
+        } catch (IllegalStateException e) {
+            if (e.getMessage().contains("logged in")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Authentication required: " + e.getMessage());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Stock error: " + e.getMessage());
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage());
+        }
     }
-
-
-    @DeleteMapping("/clear")
-    public ResponseEntity<String> clearCart(HttpSession session) {
-        cartService.clearSessionCart(session);
-        return ResponseEntity.ok("Cart cleared successfully.");
-    }
-
-
-//    @PostMapping("/save-to-database")
-//    public ResponseEntity<String> saveCartToDatabase(HttpSession session) {
-//        UserDto user = (UserDto) session.getAttribute("user");
-//        if (user == null) {
-//            return ResponseEntity.badRequest().body("User is not logged in.");
-//        }
-//
-//        cartService.saveSessionCartToDatabase(session, user.getUserId());
-//        return ResponseEntity.ok("Cart saved to database successfully.");
-//    }
 
 
 }

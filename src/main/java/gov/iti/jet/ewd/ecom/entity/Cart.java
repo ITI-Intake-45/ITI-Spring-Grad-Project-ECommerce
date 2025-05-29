@@ -43,4 +43,16 @@ public class Cart {
                 .map(item -> item.getProduct().getPrice() * item.getQuantity())
                 .reduce(0.0, Double::sum);
     }
+
+    // Helper methods for bidirectional relationship
+    public void addItem(CartItem item) {
+        items.add(item);
+        item.setCart(this);
+    }
+
+    public void removeItem(CartItem item) {
+        items.remove(item);
+        item.setCart(null);
+    }
+
 }

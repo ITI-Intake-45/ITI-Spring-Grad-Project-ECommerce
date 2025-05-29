@@ -1,10 +1,8 @@
 package gov.iti.jet.ewd.ecom.controller;
 
-import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
-import gov.iti.jet.ewd.ecom.dto.UpdateUserDto;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
-import gov.iti.jet.ewd.ecom.dto.CreateUserDto;
+import gov.iti.jet.ewd.ecom.dto.*;
 import gov.iti.jet.ewd.ecom.entity.User;
+import gov.iti.jet.ewd.ecom.exception.InvalidCredentialsException;
 import gov.iti.jet.ewd.ecom.exception.UserNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
@@ -163,28 +161,28 @@ public class UserController {
     }
 
     @PostMapping("/update-profile")
-public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) {
+    public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) {
 
-    
-    
-     
+
+
+
     UserDto currentUser = (UserDto) session.getAttribute("user");
 
-    
+
     if (currentUser == null) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
     }
-     
+
 
     String currentEmail=userService.getUserById(currentUser.getUserId()).getEmail();
-   
+
     if(currentEmail.equals( updatedUser.getEmail())==false && userService.emailExists(updatedUser.getEmail()) )
     {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");
     }
-        
 
-   
+
+
 
     currentUser.setName(updatedUser.getName());
     currentUser.setEmail(updatedUser.getEmail());
@@ -192,10 +190,10 @@ public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUs
     currentUser.setAddress(updatedUser.getAddress());
 
 
-   
-   
-      
-   
+
+
+
+
     boolean success = userService.updateProfile((UserDto)currentUser);
 
 
@@ -207,6 +205,34 @@ public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUs
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile");
     }
         
-}
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            @Valid
+            @RequestBody
+            ChangePasswordDto changePasswordDto,
+            Authentication authentication,
+            HttpSession session) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        UserDto currentUser = (UserDto) session.getAttribute("user");
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+
+        try {
+            userService.changePassword(currentUser.getUserId(), changePasswordDto);
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (InvalidCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
 
 }

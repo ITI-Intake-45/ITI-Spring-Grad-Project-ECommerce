@@ -1,6 +1,7 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
 import gov.iti.jet.ewd.ecom.dto.CartDTO;
+import gov.iti.jet.ewd.ecom.dto.ChangePasswordDto;
 import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.dto.UserDto;
 import gov.iti.jet.ewd.ecom.entity.Cart;
@@ -292,6 +293,25 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .password(user.getPassword())
                 .roles("USER")
                 .build();
+    }
+
+
+    @Override
+    public void changePassword(int userId, ChangePasswordDto changePasswordDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        // Verify old password
+        if (!BCrypt.checkpw(changePasswordDto.getOldPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Incorrect old password");
+        }
+
+        // Hash and update new password
+        String hashedNewPassword = BCrypt.hashpw(changePasswordDto.getNewPassword(), BCrypt.gensalt(12));
+        user.setPassword(hashedNewPassword);
+
+        // Save updated user
+        userRepository.save(user);
     }
 
 

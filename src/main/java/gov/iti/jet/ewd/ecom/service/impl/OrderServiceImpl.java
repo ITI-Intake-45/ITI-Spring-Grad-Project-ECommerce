@@ -1,6 +1,8 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.dto.OrderDto;
 import gov.iti.jet.ewd.ecom.entity.*;
+import gov.iti.jet.ewd.ecom.exception.OrderNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.OrderMapper;
 import gov.iti.jet.ewd.ecom.repository.CartRepository;
 import gov.iti.jet.ewd.ecom.repository.OrderRepository;
@@ -9,10 +11,13 @@ import gov.iti.jet.ewd.ecom.service.OrderService;
 import gov.iti.jet.ewd.ecom.util.CostCalculator;
 import gov.iti.jet.ewd.ecom.util.DataValidator;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /*
     Here I made use of the fact that the cart id is just a reference to the user id.
@@ -100,4 +105,43 @@ public class OrderServiceImpl implements OrderService {
 
         return "Order #" + savedOrder.getOrderId() + " created successfully";
     }
+
+    public Page<OrderDto> getAllOrders(Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAllOrders(pageable);
+
+        return orderPage.map(orderMapper::toDto);
+    }
+
+
+    public Page<OrderDto> getOrdersByUserId(int userId, Pageable pageable) {
+        return orderRepository.findByUserUserId(userId, pageable)
+                .map(orderMapper::toDto);
+    }
+
+    public Optional<OrderDto> getOrderById(int orderId) {
+        return orderRepository.findByOrderId(orderId)
+                .map(orderMapper::toDto);
+    }
+
+    public Optional<OrderDto> getOrderForUser(int userId, int orderId) {
+        return orderRepository.findByOrderIdAndUserUserId(orderId, userId)
+                .map(orderMapper::toDto);
+    }
+
+    @Transactional
+    public void cancelOrder(int orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("Order is already cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+    }
+
+
+
+
 }

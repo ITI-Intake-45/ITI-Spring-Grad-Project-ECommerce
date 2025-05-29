@@ -1,5 +1,6 @@
-package gov.iti.jet.ewd.ecom.service;
+package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;

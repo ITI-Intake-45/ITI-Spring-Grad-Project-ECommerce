@@ -4,6 +4,7 @@ import gov.iti.jet.ewd.ecom.repository.UserRepository;
 import gov.iti.jet.ewd.ecom.service.impl.UserServiceImpl;
 import gov.iti.jet.ewd.ecom.security.AuthRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -30,6 +31,9 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Value("${security.rememberme.key}")
+    private String rememberMeKey;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -37,7 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // CHANGED: Use session-based authentication instead of stateless
+                //  Use session-based authentication instead of stateless
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .maximumSessions(1)
@@ -62,16 +66,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
 
-                        // User endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/logout").authenticated()
-                        .requestMatchers("/api/v1/carts/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").authenticated()
-
-                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
-                .formLogin(AbstractHttpConfigurer::disable); // Disable default form login
+                .rememberMe(remember -> remember
+                        .key(rememberMeKey) // Use a unique secret key
+                        .tokenValiditySeconds(7 * 24 * 60 * 60) // 7 days
+                        .rememberMeParameter("remember-me") // Name of the checkbox parameter
+                        .userDetailsService(jpaUserDetailsService()) // Required for remember-me functionality
+                )
+                .httpBasic(Customizer.withDefaults());
         return http.build();
     }
 
@@ -96,7 +99,6 @@ public class SecurityConfig {
         return new UserServiceImpl(userRepository);
     }
 
-    // Create separate authentication providers for each UserDetailsService
     @Bean(name = "inMemoryAuthProvider")
     public DaoAuthenticationProvider inMemoryAuthProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -113,7 +115,6 @@ public class SecurityConfig {
         return provider;
     }
 
-    // FIXED: Use ProviderManager instead of configureGlobal
     @Bean
     @Primary
     public AuthenticationManager authenticationManager() throws Exception {
@@ -123,10 +124,5 @@ public class SecurityConfig {
         ));
     }
 
-    // REMOVED: The problematic configureGlobal method that caused circular dependency
-    // @Autowired
-    // public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-    //     auth.authenticationProvider(inMemoryAuthProvider())
-    //             .authenticationProvider(jpaAuthProvider());
-    // }
+
 }

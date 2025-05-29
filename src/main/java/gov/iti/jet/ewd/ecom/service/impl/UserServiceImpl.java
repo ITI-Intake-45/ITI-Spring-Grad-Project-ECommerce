@@ -36,7 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
-    private final EmailServiceImpl emailServiceImpl;
+
+    @Autowired
+    private EmailServiceImpl emailServiceImpl;
 
     private final ConcurrentHashMap<String, String> otpStorage = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> otpExpirationTime = new ConcurrentHashMap<>();
@@ -50,8 +52,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private CartService cartService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, EmailServiceImpl emailServiceImpl) {
-        this.emailServiceImpl = emailServiceImpl;
+    public UserServiceImpl(UserRepository userRepository) {
+//        this.emailServiceImpl = emailServiceImpl;
         this.userRepository = userRepository;
     }
 

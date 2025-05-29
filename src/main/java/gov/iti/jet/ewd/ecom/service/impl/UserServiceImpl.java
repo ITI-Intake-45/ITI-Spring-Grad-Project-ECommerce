@@ -1,5 +1,6 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.dto.CartDTO;
 import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.dto.UserDto;
 import gov.iti.jet.ewd.ecom.entity.Cart;
@@ -9,6 +10,7 @@ import gov.iti.jet.ewd.ecom.exception.InvalidCredentialsException;
 import gov.iti.jet.ewd.ecom.exception.UserNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.repository.UserRepository;
+import gov.iti.jet.ewd.ecom.service.CartService;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,26 +29,35 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
-    private EmailServiceImpl emailServiceImpl;
+    private final EmailServiceImpl emailServiceImpl;
 
     @Autowired
     private UserMapper userMapper;
 
+
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    private CartService cartService;
+
+
+    @Autowired
+    public UserServiceImpl(UserRepository userRepository, EmailServiceImpl emailServiceImpl) {
+        this.emailServiceImpl = emailServiceImpl;
         this.userRepository = userRepository;
     }
 
     @Override
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new EmailAlreadyExistsException("User with email '" + user.getEmail() + "' already exists");
+
+            throw new EmailAlreadyExistsException("User with email '" +
+                    user.getEmail() + "' already exists");
         }
         // Hash the password
         String hashedPassword;
@@ -57,6 +68,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         Cart cart = new Cart();
         cart.setUser(user);
         user.setCart(cart);
+
+        //set token to this user
+        // String token = jwtService.createToken(email, Duration.ofHours(24));
+
         return userRepository.save(user);
     }
 
@@ -83,16 +98,32 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    public int changeBalance(int userId, double amount) {
+        if (!userRepository.existsByUserId(userId)) {
+            throw new UserNotFoundException("User with ID '" +
+                    userId + "' doesn't exist");
+        }
+        return userRepository.updateCreditBalance(userId, amount);
+    }
+
+    @Override
     public void forgotPassword(String email) {
         if (!userRepository.existsByEmail(email)) {
             throw new UserNotFoundException("email: " + email + " does not exist");
         }
+
         // Generate a temporary password reset token
         String resetToken = UUID.randomUUID().toString();
 
         // Send resetToken via email to the user
         emailServiceImpl.sendPasswordResetEmail(email, resetToken);
+
     }
+
+    @Override
+    public void resetPassword(String resetToken, String newPassword) {
+    }
+
 
     @Override
     public User authenticateUser(String email, String password) {
@@ -100,17 +131,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         throw new UnsupportedOperationException("Unimplemented method 'authenticateUser'");
     }
 
-    @Override
-    public void resetPassword(String resetToken, String newPassword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'resetPassword'");
-    }
-
-    @Override
-    public User changeBalance(int userId, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'changeBalance'");
-    }
 
     @Override
     public void verifyEmail(String verificationToken) {
@@ -149,26 +169,68 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         // Create and store user DTO
         UserDto userDto = userMapper.toDTO(user);
+
+        // Set user in session
         session.setAttribute("user", userDto);
+
+        initializeSessionCart(session, userDto.getUserId());
+
 
         return userDto;
     }
 
+
+
+
+
     @Override
     public void logout(HttpSession session) {
-        // Clear Spring Security context
-        SecurityContextHolder.clearContext();
-
-        // Save cart by id in DB (implement as needed)
+        // Save cart to database before logout
+        UserDto user = (UserDto) session.getAttribute("user");
+        if (user != null) {
+            try {
+                cartService.saveSessionCartToDatabase(session, user.getUserId());
+            } catch (Exception e) {
+                // Log error but don't prevent logout
+                System.err.println("Error saving cart on logout: " + e.getMessage());
+            }
+        }
 
         // Invalidate session
         session.invalidate();
     }
 
+
+    /**
+     * Initialize session cart for logged-in user
+     * - Load existing cart from database if available
+     * - Create empty cart if no database cart exists
+     */
+    private void initializeSessionCart(HttpSession session, int userId) {
+        try {
+            // Try to load cart from database
+            CartDTO cartDTO = cartService.loadCartFromDatabase(userId);
+
+            // Set the cart in session with key "sessionCart"
+            session.setAttribute("sessionCart", cartDTO);
+
+            System.out.println("Session cart initialized for user: " + userId);
+        } catch (Exception e) {
+            // If error loading from database, create empty cart
+            CartDTO emptyCart = cartService.createEmptyCart(userId);
+            session.setAttribute("sessionCart", emptyCart);
+
+            System.err.println("Error loading cart from database, created empty cart: " + e.getMessage());
+        }
+    }
+
+
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         gov.iti.jet.ewd.ecom.entity.User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
 
         return org.springframework.security.core.userdetails.User
                 .builder()

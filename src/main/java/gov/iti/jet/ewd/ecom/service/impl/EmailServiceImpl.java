@@ -35,4 +35,7 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send password reset email", e);
         }
     }
+
+    public void sendOtpEmail(String email, String otpCode) {
+    }
 }

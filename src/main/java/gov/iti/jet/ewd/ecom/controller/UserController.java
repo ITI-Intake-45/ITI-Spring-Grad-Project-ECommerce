@@ -8,13 +8,14 @@ import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,11 +51,24 @@ public class UserController {
         return ResponseEntity.ok(userDtos);
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(userMapper.toDTO(user));
+    }
+
+    @PutMapping("/changeBalance")
+    public ResponseEntity<UserDto> updateBalance(
+            @RequestParam @Min(1) int userId,
+            @RequestParam double amount) {
+
+        if (amount == 0) {
+            throw new IllegalArgumentException("Amount cannot be zero");
+        }
+        userService.changeBalance(userId, amount);
+        return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userId)));
     }
 
     /******************* User Login API ************************/

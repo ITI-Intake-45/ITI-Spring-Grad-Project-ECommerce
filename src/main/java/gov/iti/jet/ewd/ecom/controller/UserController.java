@@ -5,6 +5,7 @@ import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.dto.UserDto;
 import gov.iti.jet.ewd.ecom.dto.CreateUserDto;
 import gov.iti.jet.ewd.ecom.entity.User;
+import gov.iti.jet.ewd.ecom.exception.UserNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -90,9 +91,32 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No active session.");
         }
     }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        try {
+            userService.forgotPassword(email);
+            return ResponseEntity.ok("Password reset instructions sent to your email");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
 
 
+    @PostMapping("/verify-otp")
+    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otpCode) {
+        boolean isValid = userService.verifyOtp(email, otpCode);
+        if (isValid) {
+            return ResponseEntity.ok("OTP verified successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        }
+    }
 
-
-
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String email, @RequestParam String newPassword) {
+        userService.resetPassword(email, newPassword);
+        return ResponseEntity.ok("Password reset successfully");
+    }
 }

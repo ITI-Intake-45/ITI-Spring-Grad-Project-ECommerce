@@ -21,21 +21,18 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendPasswordResetEmail(String email, String resetToken) {
+    public void sendOtpEmail(String email, String otpCode) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(email);
-            message.setSubject("Password Reset Request");
-            message.setText("Dear User,\n\nPlease use the following token to reset your password: " + resetToken +
-                    "\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nE-commerce Team");
+            message.setSubject("Password Reset OTP Code");
+            message.setText("Dear User,\n\nYour OTP code for password reset is: " + otpCode +
+                    "\n\nThis code will expire in 10 minutes. If you did not request a password reset, please ignore this email.\n\nBest regards,\nE-commerce Team");
 
             mailSender.send(message);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send password reset email", e);
+            throw new RuntimeException("Failed to send OTP email", e);
         }
-    }
-
-    public void sendOtpEmail(String email, String otpCode) {
     }
 }

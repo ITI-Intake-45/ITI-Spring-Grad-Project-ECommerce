@@ -222,4 +222,24 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    //update profile 
+    @Override
+public boolean updateProfile(UserDto user) {
+    User existingUser = userRepository.findById(user.getUserId())
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+   
+
+    // Update allowed fields
+    existingUser.setName(user.getName());
+    existingUser.setEmail(user.getEmail());
+    existingUser.setPhone(user.getPhone());
+    existingUser.setAddress(user.getAddress());
+
+    userRepository.save(existingUser);
+
+    return true;
+}
+
+
 }

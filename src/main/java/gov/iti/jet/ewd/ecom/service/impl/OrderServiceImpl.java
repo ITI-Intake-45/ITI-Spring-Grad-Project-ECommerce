@@ -4,9 +4,11 @@ import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.mapper.OrderMapper;
 import gov.iti.jet.ewd.ecom.repository.CartRepository;
 import gov.iti.jet.ewd.ecom.repository.OrderRepository;
+import gov.iti.jet.ewd.ecom.service.CartService;
 import gov.iti.jet.ewd.ecom.service.OrderService;
 import gov.iti.jet.ewd.ecom.util.CostCalculator;
 import gov.iti.jet.ewd.ecom.util.DataValidator;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,18 +26,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final OrderMapper orderMapper;
+    private final CartService cartService;
 
     public OrderServiceImpl(OrderRepository orderRepository,
-                CartRepository cartRepository,
-                OrderMapper orderMapper) {
+                            CartRepository cartRepository,
+                            OrderMapper orderMapper,
+                            CartService cartService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.orderMapper = orderMapper;
+        this.cartService = cartService;
     }
 
     @Override
     @Transactional
-    public String checkout(int userId) {
+    public String checkout(HttpSession session, int userId) {
         DataValidator.validateId(userId);
 
         Cart userCart = cartRepository.findByCartId(userId);
@@ -45,6 +50,11 @@ public class OrderServiceImpl implements OrderService {
         User user = userCart.getUser();
 
         List<CartItem> cartItems = userCart.getItems();
+        if (cartItems.isEmpty()) {
+            throw new IllegalStateException("Cannot checkout with empty cart");
+        }
+
+
         double totalCost = CostCalculator.calculateTotalCost(cartItems);
 
         if (totalCost > user.getCreditBalance()) {
@@ -80,8 +90,13 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        userCart.getItems().clear();
-        cartRepository.save(userCart);
+        // Clear cart items from database
+//        userCart.getItems().clear();
+//        cartRepository.save(userCart);
+
+        // Clear cart items from the session and also the database
+        cartService.clearCartAfterCheckout(session, userId);
+
 
         return "Order #" + savedOrder.getOrderId() + " created successfully";
     }

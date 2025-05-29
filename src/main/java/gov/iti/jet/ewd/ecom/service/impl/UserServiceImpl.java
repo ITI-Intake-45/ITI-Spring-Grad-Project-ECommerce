@@ -185,6 +185,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void logout(HttpSession session) {
+
+        // Clear Spring Security context
+        SecurityContextHolder.clearContext();
+        
+        
         // Save cart to database before logout
         UserDto user = (UserDto) session.getAttribute("user");
         if (user != null) {

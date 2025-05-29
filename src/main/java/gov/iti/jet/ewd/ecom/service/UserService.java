@@ -26,6 +26,8 @@ public interface UserService {
 
    public boolean emailExists(String email);
 
+   public boolean updateProfile(UserDto user);
+
     // public User updateUserProfile(int userId, UserProfileDto profileDto) ;
     //public void changePassword(int userId, ChangePasswordDto changePasswordDto);
 
@@ -33,5 +35,7 @@ public interface UserService {
     /************************ AuthService (login , logout) ***************/
     UserDto login(LoginRequestDto loginRequestDto, HttpSession session);
     void logout(HttpSession session);
+
+
 
 }

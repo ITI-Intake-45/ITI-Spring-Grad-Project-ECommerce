@@ -2,6 +2,7 @@ package gov.iti.jet.ewd.ecom.entity;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -62,4 +63,6 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
 
+    private String resetToken;
+    private Date resetTokenExpiry;
 }

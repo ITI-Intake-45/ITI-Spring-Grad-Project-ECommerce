@@ -1,9 +1,6 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
-import gov.iti.jet.ewd.ecom.dto.CartDTO;
-import gov.iti.jet.ewd.ecom.dto.ChangePasswordDto;
-import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
+import gov.iti.jet.ewd.ecom.dto.*;
 import gov.iti.jet.ewd.ecom.entity.Cart;
 import gov.iti.jet.ewd.ecom.entity.User;
 import gov.iti.jet.ewd.ecom.exception.EmailAlreadyExistsException;
@@ -19,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -101,12 +96,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public int changeBalance(int userId, double amount) {
-        if (!userRepository.existsByUserId(userId)) {
+    public double changeBalance(CreditBalanceDto creditBalanceDto, HttpSession session) {
+        UserDto userDto = (UserDto) session.getAttribute("user");
+
+        if (!userRepository.existsByUserId(userDto.getUserId())) {
             throw new UserNotFoundException("User with ID '" +
-                    userId + "' doesn't exist");
+                    userDto.getUserId() + "' doesn't exist");
         }
-        return userRepository.updateCreditBalance(userId, amount);
+        return userRepository.updateCreditBalance(userDto.getUserId(), creditBalanceDto.getBalance());
     }
 
     @Override

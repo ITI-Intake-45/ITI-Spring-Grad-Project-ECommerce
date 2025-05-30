@@ -1,5 +1,6 @@
 package gov.iti.jet.ewd.ecom.service;
 
+import gov.iti.jet.ewd.ecom.dto.CreditBalanceDto;
 import gov.iti.jet.ewd.ecom.dto.ChangePasswordDto;
 import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.dto.UserDto;
@@ -23,7 +24,7 @@ public interface UserService {
     void resetPassword(String email, String newPassword);
 
 
-    public int changeBalance(int userId, double amount) ;
+    public double changeBalance(CreditBalanceDto creditBalanceDto, HttpSession session) ;
 
    public boolean emailExists(String email);
 

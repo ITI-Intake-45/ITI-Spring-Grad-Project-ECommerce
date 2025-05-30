@@ -8,7 +8,6 @@ import gov.iti.jet.ewd.ecom.mapper.UserMapper;
 import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,14 +60,16 @@ public class UserController {
 
     @PutMapping("/changeBalance")
     public ResponseEntity<UserDto> updateBalance(
-            @RequestParam @Min(1) int userId,
-            @RequestParam double amount) {
+            @RequestBody CreditBalanceDto creditBalanceDto,
+            HttpSession session) {
 
-        if (amount == 0) {
+        UserDto userDto = (UserDto) session.getAttribute("user");
+
+        if (creditBalanceDto.getBalance() == 0) {
             throw new IllegalArgumentException("Amount cannot be zero");
         }
-        userService.changeBalance(userId, amount);
-        return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userId)));
+        userService.changeBalance(creditBalanceDto, session);
+        return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userDto.getUserId())));
     }
 
     /******************* User Login API ************************/

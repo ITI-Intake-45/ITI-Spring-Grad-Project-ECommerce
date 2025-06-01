@@ -101,6 +101,7 @@ public class SecurityConfig {
     }
 
     @Bean(name = "jpaUserDetailsService")
+    @Primary
     public UserDetailsService jpaUserDetailsService() {
         return new UserServiceImpl(userRepository);
     }

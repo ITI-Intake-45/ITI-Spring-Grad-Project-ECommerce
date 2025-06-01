@@ -3,6 +3,7 @@ package gov.iti.jet.ewd.ecom.controller;
 import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
 import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.repository.*;
+import gov.iti.jet.ewd.ecom.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -10,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.mock.web.MockHttpSession;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,20 +35,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class OrderControllerTest {
 
     @Autowired
-    private UserRepository userRepository;
-    
+    private UserService userService;
+
     @Autowired
     private ProductCategoryRepository productCategoryRepository;
-    
+
     @Autowired
     private ProductRepository productRepository;
-    
+
     @Autowired
     private CartRepository cartRepository;
 
     @Autowired
     private OrderRepository orderRepository;
-    
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -55,8 +58,10 @@ class OrderControllerTest {
     @Test
     void placeOrder() throws Exception {
         // Arrange
-        User user = getUserTest();
-        userRepository.save(user);
+        User user = getUserTestWithPlainText();
+        String plainPassword = user.getPassword();
+
+        user = userService.createUser(user);
 
         List<ProductCategory> categories = getProductCategoriesTestList();
         categories = productCategoryRepository.saveAll(categories);
@@ -67,44 +72,46 @@ class OrderControllerTest {
         Cart cart = getCartTest(user, products);
         cartRepository.save(cart);
 
-        // Act
+        // Act - Login and get session
         LoginRequestDto loginRequestDto = new LoginRequestDto();
         loginRequestDto.setEmail(user.getEmail());
-        loginRequestDto.setPassword(user.getPassword());
-        
+        loginRequestDto.setPassword(plainPassword);
+
         String loginJson = objectMapper.writeValueAsString(loginRequestDto);
-        
-        mockMvc.perform(post("/api/v1/users/login")
+
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
+        // Get the session from the login request
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession();
+
+        // Use the session for the order placement request
         String result = mockMvc.perform(post("/api/v1/orders/{userId}", user.getUserId())
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .session(session))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        
+
         // Assert
         assertAll(
                 () -> assertTrue(result.contains("Order #")),
                 () -> assertTrue(result.contains("created successfully"))
         );
-        
+
         Optional<Order> orderOptional = orderRepository.findByOrderId(1);
         Order order = orderOptional.orElse(null);
 
-        assertAll(
-                () -> {
-                    assertNotNull(order);
-                    assertNotNull(order.getUser());
-                    assertEquals(user.getUserId(), order.getUser().getUserId());
-                }
-        );
+        assertNotNull(order);
+        assertNotNull(order.getUser());
+        assertEquals(user.getUserId(), order.getUser().getUserId());
     }
 
-    private User getUserTest() {
+    private User getUserTestWithPlainText() {
         User user = new User();
 
         user.setEmail("test@example.com");
@@ -114,25 +121,21 @@ class OrderControllerTest {
         user.setCreditBalance(1000);
         user.setPhone("+235704422");
 
-        Cart cart = new Cart();
-        user.setCart(cart);
-        cart.setUser(user);
-        
         return user;
     }
-    
+
     private List<ProductCategory> getProductCategoriesTestList() {
         List<ProductCategory> categories = new ArrayList<>();
-        
+
         categories.add(new ProductCategory("Coffee"));
         categories.add(new ProductCategory("Tea"));
-        
+
         return categories;
     }
-    
+
     private List<Product> getProductsTestList(List<ProductCategory> categories) {
         List<Product> products = new ArrayList<>();
-        
+
         Product product1 = new Product();
         product1.setName(categories.getFirst().getName() + " 1" );
         product1.setDescription(categories.getFirst().getName() + " 1 description" );
@@ -148,32 +151,30 @@ class OrderControllerTest {
         product2.setCategory(categories.get(1));
         product2.setImage(categories.get(1).getName() + " 1.png");
         product2.setStock(5);
-        
+
         products.add(product1);
         products.add(product2);
-        
+
         return products;
     }
-    
+
     private Cart getCartTest(User user, List<Product> products) {
         Cart cart = cartRepository.findByCartId(user.getUserId());
 
         Product product1 = products.get(0);
         Product product2 = products.get(1);
-        
+
         CartItem cartItem1 = new CartItem();
-        cartItem1.setCart(cart);
         cartItem1.setProduct(product1);
         cartItem1.setQuantity(2);
-        
+
         CartItem cartItem2 = new CartItem();
-        cartItem2.setCart(cart);
         cartItem2.setProduct(product2);
         cartItem2.setQuantity(1);
-        
+
         cart.addItem(cartItem1);
         cart.addItem(cartItem2);
-        
+
         return cart;
     }
 }

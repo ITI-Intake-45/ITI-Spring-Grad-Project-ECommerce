@@ -26,7 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
-    private String email;
+    private ForgotPasswordDTO forgotPasswordDTO;
 
     @Autowired
     public UserController(UserService userService, UserMapper userMapper) {
@@ -119,10 +119,10 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody String email) {
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
-            this.email = email;
-            userService.forgotPassword(email);
+            this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
+            userService.forgotPassword(forgotPasswordDTO.getEmail());
             return ResponseEntity.ok("Password reset instructions sent to your email");
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -134,7 +134,7 @@ public class UserController {
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
 
-        boolean isValid = userService.verifyOtp(this.email, otpObj.getOtp());
+        boolean isValid = userService.verifyOtp(this.forgotPasswordDTO.getEmail(), otpObj.getOtp());
         if (isValid) {
             return ResponseEntity.ok("OTP verified successfully");
         } else {
@@ -144,7 +144,7 @@ public class UserController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
-        userService.resetPassword(this.email,resetPasswordDTO.getPassword());
+        userService.resetPassword(this.forgotPasswordDTO.getEmail(),resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password reset successfully");
     }
 

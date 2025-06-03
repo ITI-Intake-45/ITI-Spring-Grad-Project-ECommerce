@@ -55,10 +55,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User createUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail()) || userRepository.existsByphone(user.getPhone())) {
 
-            throw new EmailAlreadyExistsException("User with email '" +
-                    user.getEmail() + "' already exists");
+            throw new EmailAlreadyExistsException("Email or Phone already exist! Please try another email or phone number.");
         }
         // Hash the password
         String hashedPassword;
@@ -89,6 +88,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
+    @Override
+    public boolean phoneExists(String phone) {
+        return userRepository.existsByphone(phone);
+    }
+
 
     @Override
     public boolean emailExists(String email) {

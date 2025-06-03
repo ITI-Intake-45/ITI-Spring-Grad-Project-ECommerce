@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
   
-    //boolean existsByEmail(@NonNull @Email(regexp = ".+@.+\\..+") String email);
 
     /* Find a user by email address */
     Optional<User>  findByEmail(String email);
@@ -19,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByEmail(String email);
 
     boolean existsByUserId(int userId);
+
+    boolean existsByphone(String phone);
 
 
     /* Change user's password */

@@ -26,8 +26,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body("The provided email address is already in use.");
+          return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

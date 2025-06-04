@@ -30,8 +30,7 @@ public interface UserService {
 
    public boolean updateProfile(UserDto user);
 
-    // public User updateUserProfile(int userId, UserProfileDto profileDto) ;
-    //public void changePassword(int userId, ChangePasswordDto changePasswordDto);
+   public boolean phoneExists(String phone);
 
 
     /************************ AuthService (login , logout) ***************/

@@ -26,6 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private ForgotPasswordDTO forgotPasswordDTO;
 
     @Autowired
     public UserController(UserService userService, UserMapper userMapper) {
@@ -65,8 +66,8 @@ public class UserController {
 
         UserDto userDto = (UserDto) session.getAttribute("user");
 
-        if (creditBalanceDto.getBalance() == 0) {
-            throw new IllegalArgumentException("Amount cannot be zero");
+        if (creditBalanceDto.getBalance() <= 0) {
+            throw new IllegalArgumentException("Amount cannot be zero or less than zero!");
         }
         userService.changeBalance(creditBalanceDto, session);
         return ResponseEntity.ok(userMapper.toDTO(userService.getUserById(userDto.getUserId())));
@@ -116,10 +117,12 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
     }
+
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
-            userService.forgotPassword(email);
+            this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
+            userService.forgotPassword(forgotPasswordDTO.getEmail());
             return ResponseEntity.ok("Password reset instructions sent to your email");
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -129,8 +132,9 @@ public class UserController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otpCode) {
-        boolean isValid = userService.verifyOtp(email, otpCode);
+    public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
+
+        boolean isValid = userService.verifyOtp(this.forgotPasswordDTO.getEmail(), otpObj.getOtp());
         if (isValid) {
             return ResponseEntity.ok("OTP verified successfully");
         } else {
@@ -139,10 +143,9 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestParam String email, @RequestParam String newPassword) {
-        userService.resetPassword(email, newPassword);
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+        userService.resetPassword(this.forgotPasswordDTO.getEmail(),resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password reset successfully");
-
     }
 
     // Helper class for session status response
@@ -165,39 +168,29 @@ public class UserController {
     public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) {
 
 
-
-
     UserDto currentUser = (UserDto) session.getAttribute("user");
-
 
     if (currentUser == null) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
     }
 
-
     String currentEmail=userService.getUserById(currentUser.getUserId()).getEmail();
+    String currentPhone = userService.getUserById(currentUser.getUserId()).getPhone();
 
     if(currentEmail.equals( updatedUser.getEmail())==false && userService.emailExists(updatedUser.getEmail()) )
     {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");
     }
-
-
-
-
+    if(currentPhone.equals( updatedUser.getPhone())==false && userService.phoneExists(updatedUser.getPhone()) )
+    {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Phone already exists");
+    }
     currentUser.setName(updatedUser.getName());
     currentUser.setEmail(updatedUser.getEmail());
     currentUser.setPhone(updatedUser.getPhone());
     currentUser.setAddress(updatedUser.getAddress());
 
-
-
-
-
-
     boolean success = userService.updateProfile((UserDto)currentUser);
-
-
 
     if (success) {
         session.setAttribute("user", currentUser); // Update session

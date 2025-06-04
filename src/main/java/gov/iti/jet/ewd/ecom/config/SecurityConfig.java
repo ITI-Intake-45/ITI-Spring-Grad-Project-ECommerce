@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .maxSessionsPreventsLogin(false))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
+                        .requestMatchers("/images/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/register"
                                 , "/api/v1/users/login"
                                 , "/api/v1/users/forgot-password"

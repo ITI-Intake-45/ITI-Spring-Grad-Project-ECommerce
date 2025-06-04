@@ -1,12 +1,14 @@
 package gov.iti.jet.ewd.ecom.controller;
 
 import gov.iti.jet.ewd.ecom.entity.Product;
+import gov.iti.jet.ewd.ecom.service.FileStorageService;
 import gov.iti.jet.ewd.ecom.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,10 +17,12 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, FileStorageService fileStorageService) {
         this.productService = productService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping
@@ -34,13 +38,18 @@ public class ProductController {
     @PostMapping
 //    @PreAuthorize("hasRole={'ROLE_ADMIN'}") // to secure and endpoint with role or permission
 //    @PreAuthorize("hasAuthority={'add-product'}") // to secure and endpoint with role or permission
-    public Product createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
+    public ResponseEntity<Product> createProduct(@RequestBody Product product, @RequestPart("image") MultipartFile image) {
+        String imagePath = fileStorageService.storeFile(image);
+        product.setImage(imagePath);
+        Product savedProduct = productService.createProduct(product);
+        return ResponseEntity.ok(savedProduct);
     }
 
     @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable int id, @RequestBody Product product) {
+    public Product updateProduct(@PathVariable int id, @RequestBody Product product,  @RequestPart("image") MultipartFile image) {
         product.setProductId(id);
+        String imagePath = fileStorageService.storeFile(image);
+        product.setImage(imagePath);
         return productService.updateProduct(product);
     }
 

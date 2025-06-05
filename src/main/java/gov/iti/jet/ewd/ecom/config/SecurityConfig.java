@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .maxSessionsPreventsLogin(false))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
+                        .requestMatchers("/images/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/register"
                                 , "/api/v1/users/login"
                                 , "/api/v1/users/forgot-password"
@@ -56,15 +57,22 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+	        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/users/check-session").permitAll()
 
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/orders/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/{orderId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
@@ -95,6 +103,7 @@ public class SecurityConfig {
     }
 
     @Bean(name = "jpaUserDetailsService")
+    @Primary
     public UserDetailsService jpaUserDetailsService() {
         return new UserServiceImpl(userRepository);
     }

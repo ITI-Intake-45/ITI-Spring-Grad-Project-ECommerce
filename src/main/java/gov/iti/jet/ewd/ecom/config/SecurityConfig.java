@@ -40,6 +40,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+	.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 //  Use session-based authentication instead of stateless
                 .sessionManagement(session -> session

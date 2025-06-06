@@ -106,17 +106,10 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            try {
-                User user = userService.getUserByEmail(authentication.getName());
-                return ResponseEntity.ok(userMapper.toDTO(user));
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
-    }
+public ResponseEntity<UserDto> getUserProfile(HttpSession session) {    
+UserDto userDto = (UserDto) session.getAttribute("user");   
+ return ResponseEntity.ok(userDto);
+}
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
@@ -164,42 +157,37 @@ public class UserController {
 
     }
 
-    @PostMapping("/update-profile")
-    public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) {
+    
+@PatchMapping("/update-profile")
+public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) 
+{    
+UserDto currentUser = (UserDto) session.getAttribute("user");
+    if (currentUser == null) {      
+  return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+    }    
+String currentEmail = userService.getUserById(currentUser.getUserId()).getEmail();  
+  String currentPhone = userService.getUserById(currentUser.getUserId()).getPhone();   
+ if (currentEmail.equals(updatedUser.getEmail()) == false && userService.emailExists(updatedUser.getEmail())) {  
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");   
+ } 
+   if (currentPhone.equals(updatedUser.getPhone()) == false && userService.phoneExists(updatedUser.getPhone())) {      
+  return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Phone already exists");   
+ }    
+currentUser.setName(updatedUser.getName());    
+currentUser.setEmail(updatedUser.getEmail());    
+currentUser.setPhone(updatedUser.getPhone());    
+currentUser.setAddress(updatedUser.getAddress());    
+boolean success = userService.updateProfile((UserDto) currentUser);    
+if (success) {        
+session.setAttribute("user", currentUser); // Update session   
+     return ResponseEntity.ok("Profile updated successfully"); 
+   } else {      
+  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile");  
+  }
+}
 
 
-    UserDto currentUser = (UserDto) session.getAttribute("user");
 
-    if (currentUser == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-    }
-
-    String currentEmail=userService.getUserById(currentUser.getUserId()).getEmail();
-    String currentPhone = userService.getUserById(currentUser.getUserId()).getPhone();
-
-    if(currentEmail.equals( updatedUser.getEmail())==false && userService.emailExists(updatedUser.getEmail()) )
-    {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");
-    }
-    if(currentPhone.equals( updatedUser.getPhone())==false && userService.phoneExists(updatedUser.getPhone()) )
-    {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Phone already exists");
-    }
-    currentUser.setName(updatedUser.getName());
-    currentUser.setEmail(updatedUser.getEmail());
-    currentUser.setPhone(updatedUser.getPhone());
-    currentUser.setAddress(updatedUser.getAddress());
-
-    boolean success = userService.updateProfile((UserDto)currentUser);
-
-    if (success) {
-        session.setAttribute("user", currentUser); // Update session
-        return ResponseEntity.ok("Profile updated successfully");
-    } else {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile");
-    }
-        
-    }
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(

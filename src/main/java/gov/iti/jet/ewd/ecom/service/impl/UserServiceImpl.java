@@ -217,28 +217,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 
 
-    @Override
-    public void logout(HttpSession session) {
-
-        // Clear Spring Security context
-        SecurityContextHolder.clearContext();
-        
-        
-        // Save cart to database before logout
-        UserDto user = (UserDto) session.getAttribute("user");
-        if (user != null) {
-            try {
-                cartService.saveSessionCartToDatabase(session, user.getUserId());
-            } catch (Exception e) {
-                // Log error but don't prevent logout
-                System.err.println("Error saving cart on logout: " + e.getMessage());
-            }
-        }
-
-        // Invalidate session
-        session.invalidate();
-    }
-
 
     /**
      * Initialize session cart for logged-in user
@@ -264,7 +242,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    //update profile 
+    //update profile
+
     @Override
     public boolean updateProfile(UserDto user) {
         User existingUser = userRepository.findById(user.getUserId())
@@ -281,6 +260,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userRepository.save(existingUser);
 
         return true;
+    }
+    @Override
+    public void logout(HttpSession session) {
+
+        // Clear Spring Security context
+        SecurityContextHolder.clearContext();
+
+
+        // Save cart to database before logout
+        UserDto user = (UserDto) session.getAttribute("user");
+        if (user != null) {
+            try {
+                cartService.saveSessionCartToDatabase(session, user.getUserId());
+            } catch (Exception e) {
+                // Log error but don't prevent logout
+                System.err.println("Error saving cart on logout: " + e.getMessage());
+            }
+        }
+
+        // Invalidate session
+        session.invalidate();
     }
 
     @Override

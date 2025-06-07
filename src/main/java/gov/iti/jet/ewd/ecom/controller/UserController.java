@@ -59,7 +59,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
-    @PatchMapping("/changeBalance")
+    @PatchMapping("/change-balance")
     public ResponseEntity<UserDto> updateBalance(
             @RequestBody CreditBalanceDto creditBalanceDto,
             HttpSession session) {

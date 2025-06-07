@@ -59,7 +59,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
-    @PutMapping("/changeBalance")
+    @PatchMapping("/changeBalance")
     public ResponseEntity<UserDto> updateBalance(
             @RequestBody CreditBalanceDto creditBalanceDto,
             HttpSession session) {
@@ -189,7 +189,7 @@ session.setAttribute("user", currentUser); // Update session
 
 
 
-    @PostMapping("/change-password")
+    @PatchMapping("/change-password")
     public ResponseEntity<String> changePassword(
             @Valid
             @RequestBody

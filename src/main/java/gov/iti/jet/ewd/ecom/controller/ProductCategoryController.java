@@ -15,50 +15,69 @@ public class ProductCategoryController {
     private final ProductCategoryService productCategoryService;
 
     @Autowired
-    public ProductCategoryController(ProductCategoryService productCategoryService) {
+    ProductCategoryController(ProductCategoryService productCategoryService) {
         this.productCategoryService = productCategoryService;
     }
 
     // Get all categories
     @GetMapping
-    public List<ProductCategory> getAllProductCategories() {
+    List<ProductCategory> getAllProductCategories() {
         return productCategoryService.getAllProductCategories();
     }
 
     // Get category by ID
     @GetMapping("/{id}")
-    public ProductCategory getCategoryById(@PathVariable int id) {
+    ProductCategory getCategoryById(@PathVariable int id) {
         return productCategoryService.getProductCategoryById(id);
     }
 
     // Get category by name
     @GetMapping("/name/{name}")
-    public ProductCategory getCategoryByName(@PathVariable String name) {
+    ProductCategory getCategoryByName(@PathVariable String name) {
         return productCategoryService.getProductCategoryByName(name).orElse(null);
     }
 
     // Check if category exists by name
     @GetMapping("/exists/{name}")
-    public boolean categoryExists(@PathVariable String name) {
+    boolean categoryExists(@PathVariable String name) {
         return productCategoryService.productCategoryExist(name);
     }
 
-    // Create new category
+    // Create a new category.
     @PostMapping
-    public ProductCategory createCategory(@RequestBody ProductCategory productCategory) {
-        return productCategoryService.createProductCategory(productCategory.getName());
+    ProductCategory createCategory(@RequestBody CreateCategoryDTO dto) {
+        if (dto.name() == null) {
+            throw new IllegalArgumentException("Category name must be provided");
+        }
+        if (!dto.name().trim().equals(dto.name())) {
+            throw new IllegalArgumentException("Category name cannot be empty or contain leading or trailing spaces");
+        }
+
+        return productCategoryService.createProductCategory(dto.name());
     }
 
-    // Update category
-    @PutMapping("/{id}")
-    public ProductCategory updateCategory(@PathVariable int id, @RequestBody ProductCategory category) {
-        category.setId(id);
-        return productCategoryService.updateProductCategory(category);
+    private record CreateCategoryDTO(String name) {
+    }
+
+    @PutMapping
+    ResponseEntity<String> updateCategory(@RequestBody ProductCategory category) {
+        productCategoryService.updateProductCategory(category);
+        return ResponseEntity.ok("Category updated successfully.");
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<String> deleteCategoryById(@PathVariable int id) {
+        boolean isDeleted = productCategoryService.removeProductCategoryById(id);
+        if (isDeleted) {
+            return ResponseEntity.ok("Category deleted successfully.");
+        } else {
+            return ResponseEntity.badRequest().body("Failed to delete category.");
+        }
     }
 
     // Delete category by name
     @DeleteMapping("name/{name}")
-    public ResponseEntity<String> deleteCategory(@PathVariable String name) {
+    ResponseEntity<String> deleteCategory(@PathVariable String name) {
         boolean deleted = productCategoryService.removeProductCategoryByName(name);
         if (deleted) {
             return ResponseEntity.ok("Category deleted successfully.");

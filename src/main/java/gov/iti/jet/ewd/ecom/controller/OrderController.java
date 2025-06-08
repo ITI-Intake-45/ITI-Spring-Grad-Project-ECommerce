@@ -37,7 +37,6 @@ public class OrderController {
         return orderService.checkout(session, userId);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<OrderDto>> getOrders(
             @PageableDefault(size = 10, sort = "orderId", direction = Sort.Direction.DESC) Pageable pageable
@@ -55,7 +54,6 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{orderId}")
     public ResponseEntity<?> getOrderById(@PathVariable int orderId) {
         Optional<OrderDto> orderDto = orderService.getOrderById(orderId);
@@ -73,7 +71,6 @@ public class OrderController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(@PathVariable int orderId) {
         try {

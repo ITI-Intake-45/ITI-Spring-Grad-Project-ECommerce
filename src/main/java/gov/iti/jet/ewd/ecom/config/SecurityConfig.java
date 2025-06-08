@@ -77,8 +77,14 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-	        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+	                    .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/users/check-session").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/{orderId}").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/**").permitAll()
+
+
 
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/categories/**").hasRole("ADMIN")
@@ -86,13 +92,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/{orderId}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/**").authenticated()
+//                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

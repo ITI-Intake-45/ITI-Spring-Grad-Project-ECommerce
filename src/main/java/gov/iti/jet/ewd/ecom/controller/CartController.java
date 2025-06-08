@@ -48,7 +48,7 @@ public class CartController {
     public ResponseEntity<?> addToCart(
             @Valid @RequestBody AddToCartRequest request,
             HttpSession session) {
-
+                System.out.println("frontend");
         try {
             CartDTO cart = cartService.addToSessionCart(
                     session,
@@ -101,6 +101,26 @@ public class CartController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Stock error: " + e.getMessage());
             }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<?> saveCartToDatabase(HttpSession session) {
+        try {
+            UserDto user = (UserDto) session.getAttribute("user");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Authentication required: User must be logged in to save cart");
+            }
+            cartService.saveSessionCartToDatabase(session, user.getUserId());
+            CartDTO savedCart = cartService.loadCartFromDatabase(user.getUserId());
+            return ResponseEntity.ok(savedCart);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Stock error: " + e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: " + e.getMessage());

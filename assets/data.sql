@@ -23,7 +23,7 @@ INSERT INTO users (
 (0, 'kerollos@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Kerollos Samy', '202 Dubai Marina, UAE', 0.0, '01055555555'),
 (0, 'leena@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Leena Almekkawy', '303 Riyadh Rd, Saudi Arabia', 150.0, '01266666666');
 
-// password is 'kero'
+-- password is 'kero'
 -- ----------------------------
 -- Step 2: Insert Product Categories
 -- ----------------------------

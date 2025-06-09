@@ -17,4 +17,5 @@ public interface OrderService {
     Optional<OrderDto> getOrderForUser(int userId, int orderId);
     void cancelOrder(int orderId);
 
+    void acceptOrder(int orderId);
 }

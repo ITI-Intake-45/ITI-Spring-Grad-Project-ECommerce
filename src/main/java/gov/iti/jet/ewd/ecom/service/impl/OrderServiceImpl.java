@@ -142,6 +142,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
+    @Transactional
+    public void acceptOrder(int orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.ACCEPTED) {
+            throw new IllegalStateException("Order is already cancelled");
+        }
+
+        order.setStatus(OrderStatus.ACCEPTED);
+        orderRepository.save(order);
+    }
+
+
 
 
 }

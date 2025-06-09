@@ -84,6 +84,19 @@ public class OrderController {
     }
 
 
+    @PutMapping("/{orderId}/accept")
+    public ResponseEntity<String> acceptOrder(@PathVariable int orderId) {
+        try {
+            orderService.acceptOrder(orderId);
+            return ResponseEntity.ok("Order accepted successfully.");
+        } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
 
 
 

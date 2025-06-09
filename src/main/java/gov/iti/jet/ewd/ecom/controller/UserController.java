@@ -114,8 +114,11 @@ UserDto userDto = (UserDto) session.getAttribute("user");
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
-            this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
-            userService.forgotPassword(forgotPasswordDTO.getEmail());
+           // this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
+           // userService.forgotPassword(forgotPasswordDTO.getEmail());
+            String email = forgotPasswordDTO.getEmail();
+        userService.forgotPassword(email);
+            
             return ResponseEntity.ok("Password reset instructions sent to your email");
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -123,7 +126,7 @@ UserDto userDto = (UserDto) session.getAttribute("user");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
-
+/* 
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
 
@@ -134,10 +137,23 @@ UserDto userDto = (UserDto) session.getAttribute("user");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
         }
     }
+        */
+        @PostMapping("/verify-otp")
+public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
+    try {
+        
+        boolean isValid = userService.verifyOtp(otpObj.getEmail(), otpObj.getOtp());
+        return isValid
+            ? ResponseEntity.ok("OTP verified successfully")
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+    }
+}
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
-        userService.resetPassword(this.forgotPasswordDTO.getEmail(),resetPasswordDTO.getPassword());
+        userService.resetPassword(resetPasswordDTO.getEmail(),resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password reset successfully");
     }
 

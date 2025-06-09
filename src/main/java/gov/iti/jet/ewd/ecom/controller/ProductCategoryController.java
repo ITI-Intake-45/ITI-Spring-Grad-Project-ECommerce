@@ -67,22 +67,14 @@ public class ProductCategoryController {
 
     @DeleteMapping("/{id}")
     ResponseEntity<String> deleteCategoryById(@PathVariable int id) {
-        boolean isDeleted = productCategoryService.removeProductCategoryById(id);
-        if (isDeleted) {
-            return ResponseEntity.ok("Category deleted successfully.");
-        } else {
-            return ResponseEntity.badRequest().body("Failed to delete category.");
-        }
+        productCategoryService.removeProductCategoryById(id);
+        return ResponseEntity.ok("Category deleted successfully.");
     }
 
     // Delete category by name
     @DeleteMapping("name/{name}")
     ResponseEntity<String> deleteCategory(@PathVariable String name) {
-        boolean deleted = productCategoryService.removeProductCategoryByName(name);
-        if (deleted) {
-            return ResponseEntity.ok("Category deleted successfully.");
-        } else {
-            return ResponseEntity.badRequest().body("Failed to delete category.");
-        }
+        productCategoryService.removeProductCategoryByName(name);
+        return ResponseEntity.ok("Category deleted successfully.");
     }
 }

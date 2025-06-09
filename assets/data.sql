@@ -23,7 +23,7 @@ INSERT INTO users (
 (0, 'kerollos@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Kerollos Samy', '202 Dubai Marina, UAE', 0.0, '01055555555'),
 (0, 'leena@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Leena Almekkawy', '303 Riyadh Rd, Saudi Arabia', 150.0, '01266666666');
 
-// password is 'kero'
+-- password is 'kero'
 -- ----------------------------
 -- Step 2: Insert Product Categories
 -- ----------------------------
@@ -48,16 +48,16 @@ INSERT INTO products (
     image,
     stock
 ) VALUES
-(0, 'Green Tea Leaves', 'Premium loose leaf green tea from China.', 75.5, 1, 'green_tea.png',  50),
-(0, 'Arabica Coffee Beans', '100% Arabica whole beans, medium roast.', 120.0, 2, 'green_tea.png',  80),
-(0, 'Porcelain Teacup Set', 'Set of 2 handcrafted porcelain teacups.', 90.0, 3, 'green_tea.png',  30),
-(0, 'Automatic Espresso Machine', 'Semi-professional espresso machine with milk frother.', 1500.0, 4, 'espresso.png',  15),
-(0, 'Herbal Chamomile Blend', 'Relaxing chamomile herbal infusion in tea bags.', 60.0, 1, 'chamomile.png',  60),
-(0, 'Dark Roast Coffee Beans', 'Bold dark roast beans with rich flavor profile.', 130.0, 2, 'dark_coffee.png',  40),
-(0, 'Travel Mug - Insulated', 'Double-walled insulated mug with lid.', 85.0, 3, 'mug.png',  25),
-(0, 'Manual French Press', 'Classic French press for coffee lovers.', 200.0, 4, 'french_press.png',  0),
-(0, 'Peppermint Herbal Tea', 'Fresh peppermint leaves for soothing tea.', 55.0, 1, 'peppermint.png',  70),
-(0, 'Tea Infuser Spoon', 'Stainless steel infuser spoon for loose tea.', 30.0, 5, 'infuser.png',  100);
+(0, 'Green Tea Leaves', 'Premium loose leaf green tea from China.', 75.5, 1, '1.jpg',  50),
+(0, 'Arabica Coffee Beans', '100% Arabica whole beans, medium roast.', 120.0, 2, '2.jpg',  80),
+(0, 'Porcelain Teacup Set', 'Set of 2 handcrafted porcelain teacups.', 90.0, 3, '3.jpg',  30),
+(0, 'Automatic Espresso Machine', 'Semi-professional espresso machine with milk frother.', 1500.0, 4, '4.jpg',  15),
+(0, 'Herbal Chamomile Blend', 'Relaxing chamomile herbal infusion in tea bags.', 60.0, 1, '5.jpg',  60),
+(0, 'Dark Roast Coffee Beans', 'Bold dark roast beans with rich flavor profile.', 130.0, 2, '6.jpg',  40),
+(0, 'Travel Mug - Insulated', 'Double-walled insulated mug with lid.', 85.0, 3, '7.jpg',  25),
+(0, 'Manual French Press', 'Classic French press for coffee lovers.', 200.0, 4, '8.jpg',  0),
+(0, 'Peppermint Herbal Tea', 'Fresh peppermint leaves for soothing tea.', 55.0, 1, '9.jpg',  70),
+(0, 'Tea Infuser Spoon', 'Stainless steel infuser spoon for loose tea.', 30.0, 5, '10.jpg',  100);
 
 -- ----------------------------
 -- Step 4: Insert Carts (one per user)

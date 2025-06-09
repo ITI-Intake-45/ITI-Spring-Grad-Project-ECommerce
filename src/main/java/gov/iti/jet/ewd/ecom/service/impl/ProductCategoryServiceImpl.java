@@ -4,10 +4,8 @@ import gov.iti.jet.ewd.ecom.entity.ProductCategory;
 import gov.iti.jet.ewd.ecom.exception.ProductCategoryNotFoundException;
 import gov.iti.jet.ewd.ecom.repository.ProductCategoryRepository;
 import gov.iti.jet.ewd.ecom.service.ProductCategoryService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,17 +35,20 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Override
     public ProductCategory createProductCategory(String name) {
+        if (productCategoryRepository.existsByName(name)) {
+            throw new IllegalArgumentException("Category with name (" + name + ") already exists");
+        }
+
         return productCategoryRepository.save( new ProductCategory(name));
     }
 
     @Override
-    public ProductCategory updateProductCategory(ProductCategory productCategory) {
+    public void updateProductCategory(ProductCategory productCategory) {
         ProductCategory existingCategory = productCategoryRepository.findById(productCategory.getId())
                 .orElseThrow(() -> new ProductCategoryNotFoundException("Product category not found with ID: " + productCategory.getId()));
 
         existingCategory.setName(productCategory.getName());
-
-        return productCategoryRepository.save(existingCategory);
+        productCategoryRepository.save(existingCategory);
     }
 
     @Override
@@ -57,13 +58,23 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Transactional
     @Override
+    public boolean removeProductCategoryById(int id) {
+        if (!productCategoryRepository.existsById(id)) {
+            throw new ProductCategoryNotFoundException("Not category with found with id: " + id);
+        }
+
+        return productCategoryRepository.deleteById(id) > 0;
+    }
+
+    @Transactional
+    @Override
     public boolean removeProductCategoryByName(String name) {
         if (!productCategoryRepository.existsByName(name)) {
             throw new ProductCategoryNotFoundException("Category not found: " + name);
         }
+
         return productCategoryRepository.deleteByName(name) > 0;
     }
-
 
     @Override
     public ProductCategory getProductCategoryById(int id) {

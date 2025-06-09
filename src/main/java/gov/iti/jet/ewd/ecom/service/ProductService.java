@@ -1,14 +1,16 @@
 package gov.iti.jet.ewd.ecom.service;
 
 import gov.iti.jet.ewd.ecom.entity.Product;
+import jakarta.mail.Multipart;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface ProductService {
-    Product createProduct(Product product);
-    Product updateProduct(Product product);
-    boolean deleteProductById(int id);
+    Product createProduct(Product product, MultipartFile imageFile);
+    void updateProduct(Product product, MultipartFile imageFile);
+    void deleteProductById(int id);
     Product getProductById(int id);
     List<Product> getAllProducts();
     List<Product> getProductsByCategoryId(int categoryId);

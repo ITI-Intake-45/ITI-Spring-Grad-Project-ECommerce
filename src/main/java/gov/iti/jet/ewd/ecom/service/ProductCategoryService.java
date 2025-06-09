@@ -22,5 +22,4 @@ public interface ProductCategoryService {
 
     ProductCategory getProductCategoryById(int id);
 
-
 }

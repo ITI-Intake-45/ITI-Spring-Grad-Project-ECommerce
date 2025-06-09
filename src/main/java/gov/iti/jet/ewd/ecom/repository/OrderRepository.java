@@ -1,8 +1,6 @@
 package gov.iti.jet.ewd.ecom.repository;
 
-import gov.iti.jet.ewd.ecom.dto.OrderDto;
 import gov.iti.jet.ewd.ecom.entity.Order;
-import gov.iti.jet.ewd.ecom.entity.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +10,7 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     Page<Order> findAllByOrderByOrderIdDesc(Pageable pageable);
+
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN FETCH o.user u " +
             "LEFT JOIN FETCH o.items oi " +

@@ -1,12 +1,13 @@
 package gov.iti.jet.ewd.ecom.controller;
 
 import gov.iti.jet.ewd.ecom.entity.Product;
-import gov.iti.jet.ewd.ecom.service.FileStorageService;
+import gov.iti.jet.ewd.ecom.service.ProductCategoryService;
 import gov.iti.jet.ewd.ecom.service.ProductService;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,55 +18,80 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final FileStorageService fileStorageService;
+    private final ProductCategoryService productCategoryService;
 
     @Autowired
-    public ProductController(ProductService productService, FileStorageService fileStorageService) {
+    public ProductController(ProductService productService,
+                             ProductCategoryService productCategoryService) {
         this.productService = productService;
-        this.fileStorageService = fileStorageService;
+        this.productCategoryService = productCategoryService;
     }
 
     @GetMapping
-    public List<Product> getAllProducts() {
+    List<Product> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable int id) {
+    Product getProductById(@PathVariable int id) {
         return productService.getProductById(id);
     }
 
-    @PostMapping
 //    @PreAuthorize("hasRole={'ROLE_ADMIN'}") // to secure and endpoint with role or permission
 //    @PreAuthorize("hasAuthority={'add-product'}") // to secure and endpoint with role or permission
-    public ResponseEntity<Product> createProduct(@RequestBody Product product, @RequestPart("image") MultipartFile image) {
-        String imagePath = fileStorageService.storeFile(image);
-        product.setImage(imagePath);
-        Product savedProduct = productService.createProduct(product);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<Product> createProduct(
+            @RequestPart("dto") CreateProductDTO dto,
+            @RequestPart("imageFile") MultipartFile imageFile) {
+
+        Product product = new Product();
+        product.setName(dto.name());
+        product.setDescription(dto.description());
+        product.setPrice(dto.price());
+        product.setCategory(productCategoryService.getProductCategoryById(dto.categoryId()));
+        product.setStock(dto.stock());
+
+        Product savedProduct = productService.createProduct(product, imageFile);
         return ResponseEntity.ok(savedProduct);
     }
 
-    @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable int id, @RequestBody Product product,  @RequestPart("image") MultipartFile image) {
-        product.setProductId(id);
-        String imagePath = fileStorageService.storeFile(image);
-        product.setImage(imagePath);
-        return productService.updateProduct(product);
+    private record CreateProductDTO(String name, String description, double price, int categoryId, int stock) {
+    }
+
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<String> updateProduct(
+            @RequestPart("dto") UpdateProductDTO dto,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
+
+        Product product = new Product();
+        product.setProductId(dto.id());
+        product.setName(dto.name());
+        product.setDescription(dto.description());
+        product.setPrice(dto.price());
+        product.setCategory(productCategoryService.getProductCategoryById(dto.categoryId()));
+        product.setStock(dto.stock());
+
+        productService.updateProduct(product, imageFile);
+        return ResponseEntity.ok("Product updated successfully");
+    }
+
+    private record UpdateProductDTO(int id, String name, String description, double price, int categoryId, int stock) {
     }
 
     @DeleteMapping("/{id}")
-    public boolean deleteProduct(@PathVariable int id) {
-        return productService.deleteProductById(id);
+    ResponseEntity<String> deleteProduct(@PathVariable int id) {
+        productService.deleteProductById(id);
+        return ResponseEntity.ok("Product deleted successfully");
     }
 
     @GetMapping("/category/{categoryId}")
-    public List<Product> getProductsByCategoryId(@PathVariable int categoryId) {
+    List<Product> getProductsByCategoryId(@PathVariable int categoryId) {
         return productService.getProductsByCategoryId(categoryId);
     }
 
     //http://localhost:8080/api/v1/products/filter?minPrice=0&maxPrice=200&sortDir=desc&page=1&size=3
     @GetMapping("/filter")
-    public ResponseEntity<Page<Product>> filterProducts(
+    ResponseEntity<Page<Product>> filterProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double minPrice,

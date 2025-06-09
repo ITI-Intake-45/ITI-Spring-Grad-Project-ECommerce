@@ -3,19 +3,15 @@ package gov.iti.jet.ewd.ecom.controller;
 import gov.iti.jet.ewd.ecom.dto.OrderDto;
 import gov.iti.jet.ewd.ecom.exception.OrderNotFoundException;
 import gov.iti.jet.ewd.ecom.service.OrderService;
-import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 @RestController

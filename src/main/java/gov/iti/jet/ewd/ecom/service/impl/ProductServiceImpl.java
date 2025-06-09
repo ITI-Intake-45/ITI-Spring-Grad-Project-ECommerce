@@ -1,8 +1,11 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.entity.OrderItem;
 import gov.iti.jet.ewd.ecom.entity.Product;
 import gov.iti.jet.ewd.ecom.exception.ProductNotFoundException;
+import gov.iti.jet.ewd.ecom.repository.OrderItemRepository;
 import gov.iti.jet.ewd.ecom.repository.ProductRepository;
+import gov.iti.jet.ewd.ecom.service.FileStorageService;
 import gov.iti.jet.ewd.ecom.service.ProductService;
 import gov.iti.jet.ewd.ecom.util.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,41 +23,53 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              OrderItemRepository orderItemRepository,
+                              FileStorageService fileStorageService) {
         this.productRepository = productRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product, MultipartFile imageFile) {
+        String imagePath = fileStorageService.storeFile(imageFile);
+        product.setImage(imagePath);
+
         return productRepository.save(product);
     }
 
     @Override
-    public Product updateProduct(Product product) {
+    public void updateProduct(Product product, MultipartFile imageFile) {
         Product existing = productRepository.findById(product.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + product.getProductId()));
-        existing.setName(product.getName());
-        existing.setPrice(product.getPrice());
-        existing.setDescription(product.getDescription());
-        existing.setCategory(product.getCategory());
 
-        return productRepository.save(existing);
+        if (imageFile != null) {
+            String imagePath = fileStorageService.storeFile(imageFile);
+            product.setImage(imagePath);
+        } else {
+            product.setImage(existing.getImage());
+        }
+
+        productRepository.save(product);
     }
 
     @Override
-    public boolean deleteProductById(int id) {
+    public void deleteProductById(int id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
 
-        product.setPrice(0.0);
-        product.setStock(0);
-        productRepository.save(product); // Update with new values
+        List<OrderItem> items = orderItemRepository.findAllByProduct(product);
+        if (!items.isEmpty()) {
+            throw new RuntimeException("Cannot delete product with ID: " + id + " as it is in use by " + items.size() + " order items");
+        }
 
-        return true;
+        productRepository.delete(product);
     }
-
 
     @Override
     public Product getProductById(int id) {

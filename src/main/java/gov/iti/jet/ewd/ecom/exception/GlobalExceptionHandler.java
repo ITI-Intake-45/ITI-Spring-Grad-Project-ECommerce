@@ -11,7 +11,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneral(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Something went wrong.");
+//                .body("Something went wrong.");
+                .body(ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -26,7 +27,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-          return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
@@ -35,12 +36,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<String> handleProductCategoryNotFound(ProductCategoryNotFoundException ex){
+    public ResponseEntity<String> handleProductCategoryNotFound(ProductCategoryNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @ExceptionHandler
-    public ResponseEntity<String> handleProductCategoryAlreadyExist(ProductCategoryAlreadyExistException ex){
+    public ResponseEntity<String> handleProductCategoryAlreadyExist(ProductCategoryAlreadyExistException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 

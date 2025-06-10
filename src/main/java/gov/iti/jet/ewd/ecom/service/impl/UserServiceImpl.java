@@ -101,8 +101,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public double changeBalance(CreditBalanceDto creditBalanceDto, HttpSession session) {
-        UserDto userDto = (UserDto) session.getAttribute("user");
+    public double changeBalance(CreditBalanceDTO creditBalanceDto, HttpSession session) {
+        UserDTO userDto = (UserDTO) session.getAttribute("user");
 
         if (!userRepository.existsByUserId(userDto.getUserId())) {
             throw new UserNotFoundException("User with ID '" +
@@ -174,7 +174,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     /**************** Updated login with manual authentication *************************/
     @Override
-    public UserDto login(LoginRequestDto loginRequestDto, HttpSession session) {
+    public UserDTO login(LoginRequestDTO loginRequestDto, HttpSession session) {
         // Find user in database
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid Email or Password"));
@@ -202,7 +202,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         );
 
         // Create and store user DTO
-        UserDto userDto = userMapper.toDTO(user);
+        UserDTO userDto = userMapper.toDTO(user);
 
         // Set user in session
         session.setAttribute("user", userDto);
@@ -245,7 +245,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     //update profile
 
     @Override
-    public boolean updateProfile(UserDto user) {
+    public boolean updateProfile(UserDTO user) {
         User existingUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -269,7 +269,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 
         // Save cart to database before logout
-        UserDto user = (UserDto) session.getAttribute("user");
+        UserDTO user = (UserDTO) session.getAttribute("user");
         if (user != null) {
             try {
                 cartService.saveSessionCartToDatabase(session, user.getUserId());
@@ -299,7 +299,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 
     @Override
-    public void changePassword(int userId, ChangePasswordDto changePasswordDto) {
+    public void changePassword(int userId, ChangePasswordDTO changePasswordDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 

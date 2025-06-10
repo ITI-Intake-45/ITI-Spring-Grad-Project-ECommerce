@@ -9,7 +9,6 @@ import gov.iti.jet.ewd.ecom.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,6 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
-    private ForgotPasswordDTO forgotPasswordDTO;
 
     @Autowired
     public UserController(UserService userService, UserMapper userMapper) {
@@ -35,36 +33,35 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserDTO createUserDto) {
         User user = userMapper.createDtoToEntity(createUserDto);
         User savedUser = userService.createUser(user);
         return new ResponseEntity<>(userMapper.toDTO(savedUser), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        List<UserDto> userDtos = users.stream()
+        List<UserDTO> userDTOs = users.stream()
                 .map(userMapper::toDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(userDtos);
+        return ResponseEntity.ok(userDTOs);
     }
 
-
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable int id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @PatchMapping("/change-balance")
-    public ResponseEntity<UserDto> updateBalance(
-            @RequestBody CreditBalanceDto creditBalanceDto,
+    public ResponseEntity<UserDTO> updateBalance(
+            @RequestBody CreditBalanceDTO creditBalanceDto,
             HttpSession session) {
 
-        UserDto userDto = (UserDto) session.getAttribute("user");
+        UserDTO userDto = (UserDTO) session.getAttribute("user");
 
         if (creditBalanceDto.getBalance() <= 0) {
             throw new IllegalArgumentException("Amount cannot be zero or less than zero!");
@@ -75,9 +72,9 @@ public class UserController {
 
     /******************* User Login API ************************/
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto,
+    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequestDto,
                                          HttpSession session) {
-        UserDto userDto = userService.login(loginRequestDto, session);
+        UserDTO userDto = userService.login(loginRequestDto, session);
         return ResponseEntity.ok(userDto);
     }
 
@@ -106,19 +103,19 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-public ResponseEntity<UserDto> getUserProfile(HttpSession session) {    
-UserDto userDto = (UserDto) session.getAttribute("user");   
- return ResponseEntity.ok(userDto);
-}
+    public ResponseEntity<UserDTO> getUserProfile(HttpSession session) {
+        UserDTO userDto = (UserDTO) session.getAttribute("user");
+        return ResponseEntity.ok(userDto);
+    }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
-           // this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
-           // userService.forgotPassword(forgotPasswordDTO.getEmail());
+            // this.forgotPasswordDTO.setEmail(forgotPasswordDTO.getEmail());
+            // userService.forgotPassword(forgotPasswordDTO.getEmail());
             String email = forgotPasswordDTO.getEmail();
-        userService.forgotPassword(email);
-            
+            userService.forgotPassword(email);
+
             return ResponseEntity.ok("Password reset instructions sent to your email");
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -126,34 +123,35 @@ UserDto userDto = (UserDto) session.getAttribute("user");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
-/* 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
 
-        boolean isValid = userService.verifyOtp(this.forgotPasswordDTO.getEmail(), otpObj.getOtp());
-        if (isValid) {
-            return ResponseEntity.ok("OTP verified successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+    /*
+        @PostMapping("/verify-otp")
+        public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
+
+            boolean isValid = userService.verifyOtp(this.forgotPasswordDTO.getEmail(), otpObj.getOtp());
+            if (isValid) {
+                return ResponseEntity.ok("OTP verified successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+            }
+        }
+            */
+    @PostMapping("/verify-otp")
+    public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj) {
+        try {
+
+            boolean isValid = userService.verifyOtp(otpObj.getEmail(), otpObj.getOtp());
+            return isValid
+                    ? ResponseEntity.ok("OTP verified successfully")
+                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
-        */
-        @PostMapping("/verify-otp")
-public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
-    try {
-        
-        boolean isValid = userService.verifyOtp(otpObj.getEmail(), otpObj.getOtp());
-        return isValid
-            ? ResponseEntity.ok("OTP verified successfully")
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
-    }
-}
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
-        userService.resetPassword(resetPasswordDTO.getEmail(),resetPasswordDTO.getPassword());
+        userService.resetPassword(resetPasswordDTO.getEmail(), resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password reset successfully");
     }
 
@@ -173,50 +171,45 @@ public ResponseEntity<String> verifyOtp(@RequestBody VerifyOtpDTO otpObj){
 
     }
 
-    
-@PatchMapping("/update-profile")
-public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) 
-{    
-UserDto currentUser = (UserDto) session.getAttribute("user");
-    if (currentUser == null) {      
-  return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-    }    
-String currentEmail = userService.getUserById(currentUser.getUserId()).getEmail();  
-  String currentPhone = userService.getUserById(currentUser.getUserId()).getPhone();   
- if (currentEmail.equals(updatedUser.getEmail()) == false && userService.emailExists(updatedUser.getEmail())) {  
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");   
- } 
-   if (currentPhone.equals(updatedUser.getPhone()) == false && userService.phoneExists(updatedUser.getPhone())) {      
-  return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Phone already exists");   
- }    
-currentUser.setName(updatedUser.getName());    
-currentUser.setEmail(updatedUser.getEmail());    
-currentUser.setPhone(updatedUser.getPhone());    
-currentUser.setAddress(updatedUser.getAddress());    
-boolean success = userService.updateProfile((UserDto) currentUser);    
-if (success) {        
-session.setAttribute("user", currentUser); // Update session   
-     return ResponseEntity.ok("Profile updated successfully"); 
-   } else {      
-  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile");  
-  }
-}
-
-
-
+    @PatchMapping("/update-profile")
+    public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDTO updatedUser, HttpSession session) {
+        UserDTO currentUser = (UserDTO) session.getAttribute("user");
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+        String currentEmail = userService.getUserById(currentUser.getUserId()).getEmail();
+        String currentPhone = userService.getUserById(currentUser.getUserId()).getPhone();
+        if (!currentEmail.equals(updatedUser.getEmail()) && userService.emailExists(updatedUser.getEmail())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email already exists");
+        }
+        if (!currentPhone.equals(updatedUser.getPhone()) && userService.phoneExists(updatedUser.getPhone())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Phone already exists");
+        }
+        currentUser.setName(updatedUser.getName());
+        currentUser.setEmail(updatedUser.getEmail());
+        currentUser.setPhone(updatedUser.getPhone());
+        currentUser.setAddress(updatedUser.getAddress());
+        boolean success = userService.updateProfile(currentUser);
+        if (success) {
+            session.setAttribute("user", currentUser); // Update session
+            return ResponseEntity.ok("Profile updated successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile");
+        }
+    }
 
     @PatchMapping("/change-password")
     public ResponseEntity<String> changePassword(
             @Valid
             @RequestBody
-            ChangePasswordDto changePasswordDto,
+            ChangePasswordDTO changePasswordDto,
             Authentication authentication,
             HttpSession session) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         }
 
-        UserDto currentUser = (UserDto) session.getAttribute("user");
+        UserDTO currentUser = (UserDTO) session.getAttribute("user");
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
         }

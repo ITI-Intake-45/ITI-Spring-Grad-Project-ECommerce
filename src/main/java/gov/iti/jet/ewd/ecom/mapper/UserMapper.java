@@ -1,7 +1,7 @@
 package gov.iti.jet.ewd.ecom.mapper;
 
-import gov.iti.jet.ewd.ecom.dto.CreateUserDto;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
+import gov.iti.jet.ewd.ecom.dto.CreateUserDTO;
+import gov.iti.jet.ewd.ecom.dto.UserDTO;
 import gov.iti.jet.ewd.ecom.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,7 +13,7 @@ public interface UserMapper {
      * Convert User entity to UserDto (excludes password for security)
      */
 
-    UserDto toDTO(User user);
+    UserDTO toDTO(User user);
 
     /**
      * Convert UserDto to User entity (for updates)
@@ -21,7 +21,7 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true) 
     @Mapping(target = "cart", ignore = true)     // Ignore relationships
     @Mapping(target = "orders", ignore = true)   // Ignore relationships
-    User toEntity(UserDto dto);
+    User toEntity(UserDTO dto);
 
     /**
      * Convert CreateUserDto to User entity (for new user creation)
@@ -29,5 +29,5 @@ public interface UserMapper {
     @Mapping(target = "userId", ignore = true)   // Auto-generated
     @Mapping(target = "cart", ignore = true)     // Will be created separately
     @Mapping(target = "orders", ignore = true)   // Will be created separately
-    User createDtoToEntity(CreateUserDto createUserDto);
+    User createDtoToEntity(CreateUserDTO createUserDto);
 }

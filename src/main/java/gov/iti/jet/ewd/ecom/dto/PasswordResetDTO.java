@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PasswordResetDto {
+public class PasswordResetDTO {
 
     private String token;
 

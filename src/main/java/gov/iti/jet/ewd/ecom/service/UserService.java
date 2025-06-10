@@ -1,9 +1,9 @@
 package gov.iti.jet.ewd.ecom.service;
 
-import gov.iti.jet.ewd.ecom.dto.CreditBalanceDto;
-import gov.iti.jet.ewd.ecom.dto.ChangePasswordDto;
-import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
+import gov.iti.jet.ewd.ecom.dto.CreditBalanceDTO;
+import gov.iti.jet.ewd.ecom.dto.ChangePasswordDTO;
+import gov.iti.jet.ewd.ecom.dto.LoginRequestDTO;
+import gov.iti.jet.ewd.ecom.dto.UserDTO;
 import gov.iti.jet.ewd.ecom.entity.User;
 import jakarta.servlet.http.HttpSession;
 
@@ -24,21 +24,21 @@ public interface UserService {
     void resetPassword(String email, String newPassword);
 
 
-    public double changeBalance(CreditBalanceDto creditBalanceDto, HttpSession session) ;
+    public double changeBalance(CreditBalanceDTO creditBalanceDto, HttpSession session);
 
    public boolean emailExists(String email);
 
-   public boolean updateProfile(UserDto user);
+   public boolean updateProfile(UserDTO user);
 
    public boolean phoneExists(String phone);
 
 
     /************************ AuthService (login , logout) ***************/
-    UserDto login(LoginRequestDto loginRequestDto, HttpSession session);
+    UserDTO login(LoginRequestDTO loginRequestDto, HttpSession session);
     void logout(HttpSession session);
 
 
-    void changePassword(int userId, ChangePasswordDto changePasswordDto);
+    void changePassword(int userId, ChangePasswordDTO changePasswordDto);
 
 
 }

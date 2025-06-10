@@ -16,11 +16,10 @@ public interface ProductCategoryService {
 
     boolean productCategoryExist(String name);
 
-    boolean removeProductCategoryById(int id);
+    void removeProductCategoryById(int id);
 
-    boolean removeProductCategoryByName(String name);
+    void removeProductCategoryByName(String name);
 
     ProductCategory getProductCategoryById(int id);
-
 
 }

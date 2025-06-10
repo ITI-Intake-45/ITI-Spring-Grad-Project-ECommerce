@@ -2,7 +2,7 @@ package gov.iti.jet.ewd.ecom.service.impl;
 
 import gov.iti.jet.ewd.ecom.dto.CartDTO;
 import gov.iti.jet.ewd.ecom.dto.CartItemDTO;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
+import gov.iti.jet.ewd.ecom.dto.UserDTO;
 import gov.iti.jet.ewd.ecom.entity.Cart;
 import gov.iti.jet.ewd.ecom.entity.CartItem;
 import gov.iti.jet.ewd.ecom.entity.Product;
@@ -55,7 +55,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void validateUserSession(HttpSession session) {
-        UserDto user = (UserDto) session.getAttribute("user");
+        UserDTO user = (UserDTO) session.getAttribute("user");
         if (user == null) {
             throw new IllegalStateException("User must be logged in to perform cart operations");
         }
@@ -274,8 +274,8 @@ public class CartServiceImpl implements CartService {
 
     private Integer getUserIdFromSession(HttpSession session) {
         Object userObj = session.getAttribute("user");
-        if (userObj instanceof UserDto) {
-            return ((UserDto) userObj).getUserId();
+        if (userObj instanceof UserDTO) {
+            return ((UserDTO) userObj).getUserId();
         }
         return null;
     }

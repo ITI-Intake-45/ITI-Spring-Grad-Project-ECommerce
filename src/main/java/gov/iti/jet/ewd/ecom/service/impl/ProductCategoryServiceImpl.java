@@ -58,22 +58,22 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Transactional
     @Override
-    public boolean removeProductCategoryById(int id) {
+    public void removeProductCategoryById(int id) {
         if (!productCategoryRepository.existsById(id)) {
-            throw new ProductCategoryNotFoundException("Not category with found with id: " + id);
+            throw new ProductCategoryNotFoundException("No category with found with id: " + id);
         }
 
-        return productCategoryRepository.deleteById(id) > 0;
+        productCategoryRepository.deleteById(id);
     }
 
     @Transactional
     @Override
-    public boolean removeProductCategoryByName(String name) {
+    public void removeProductCategoryByName(String name) {
         if (!productCategoryRepository.existsByName(name)) {
-            throw new ProductCategoryNotFoundException("Category not found: " + name);
+            throw new ProductCategoryNotFoundException("No category with found with name: " + name);
         }
 
-        return productCategoryRepository.deleteByName(name) > 0;
+        productCategoryRepository.deleteByName(name);
     }
 
     @Override

@@ -2,7 +2,7 @@ package gov.iti.jet.ewd.ecom.controller;
 
 import gov.iti.jet.ewd.ecom.dto.AddToCartRequest;
 import gov.iti.jet.ewd.ecom.dto.CartDTO;
-import gov.iti.jet.ewd.ecom.dto.UserDto;
+import gov.iti.jet.ewd.ecom.dto.UserDTO;
 import gov.iti.jet.ewd.ecom.service.CartService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -110,7 +110,7 @@ public class CartController {
     @PostMapping("/save")
     public ResponseEntity<?> saveCartToDatabase(HttpSession session) {
         try {
-            UserDto user = (UserDto) session.getAttribute("user");
+            UserDTO user = (UserDTO) session.getAttribute("user");
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Authentication required: User must be logged in to save cart");

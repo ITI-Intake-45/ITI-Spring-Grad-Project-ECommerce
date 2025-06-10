@@ -1,8 +1,13 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+<<<<<<< HEAD
 import gov.iti.jet.ewd.ecom.dto.CartDTO;
 import gov.iti.jet.ewd.ecom.dto.CartItemDTO;
 import gov.iti.jet.ewd.ecom.dto.OrderDto;
+=======
+import gov.iti.jet.ewd.ecom.dto.OrderDTO;
+import gov.iti.jet.ewd.ecom.dto.OrdersListStatsDTO;
+>>>>>>> origin/development
 import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.exception.OrderNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.OrderMapper;
@@ -138,30 +143,72 @@ public class OrderServiceImpl implements OrderService {
     
     return "Order #" + savedOrder.getOrderId() + " created successfully";
 }
+    @Override
+    public OrdersListStatsDTO getAllOrdersStats() {
+        List<Order> allOrders = orderRepository.findAll();
+        
+        OrdersListStatsDTO statsDTO = new OrdersListStatsDTO();
+        
+        statsDTO.totalNumberOfOrders = allOrders.size();
+        for (Order order: allOrders) {
+            switch (order.getStatus()) {
+                case OrderStatus.PENDING -> {
+                    statsDTO.pendingOrdersCount++;
+                }
+                case OrderStatus.ACCEPTED -> {
+                    statsDTO.acceptedOrdersCount++;
+                }
+                case OrderStatus.CANCELLED -> {
+                    statsDTO.cancelledOrdersCount++;
+                }
+            }
+        }
+        
+        return statsDTO;
+    }
 
-    public Page<OrderDto> getAllOrders(Pageable pageable) {
+    @Override
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findAllOrders(pageable);
 
         return orderPage.map(orderMapper::toDto);
     }
 
 
-    public Page<OrderDto> getOrdersByUserId(int userId, Pageable pageable) {
+    @Override
+    public Page<OrderDTO> getOrdersByUserId(int userId, Pageable pageable) {
         return orderRepository.findByUserUserId(userId, pageable)
                 .map(orderMapper::toDto);
     }
 
-    public Optional<OrderDto> getOrderById(int orderId) {
+    @Override
+    public Optional<OrderDTO> getOrderById(int orderId) {
         return orderRepository.findByOrderId(orderId)
                 .map(orderMapper::toDto);
     }
 
-    public Optional<OrderDto> getOrderForUser(int userId, int orderId) {
+    @Override
+    public Optional<OrderDTO> getOrderForUser(int userId, int orderId) {
         return orderRepository.findByOrderIdAndUserUserId(orderId, userId)
                 .map(orderMapper::toDto);
     }
+    
+    @Transactional
+    @Override
+    public void acceptOrder(int orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.ACCEPTED) {
+            throw new IllegalStateException("Order is already cancelled");
+        }
+
+        order.setStatus(OrderStatus.ACCEPTED);
+        orderRepository.save(order);
+    }
 
     @Transactional
+    @Override
     public void cancelOrder(int orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
@@ -173,8 +220,5 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
     }
-
-
-
 
 }

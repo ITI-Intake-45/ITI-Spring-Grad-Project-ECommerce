@@ -1,6 +1,6 @@
 package gov.iti.jet.ewd.ecom.controller;
 
-import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
+import gov.iti.jet.ewd.ecom.dto.LoginRequestDTO;
 import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.repository.*;
 import gov.iti.jet.ewd.ecom.service.UserService;
@@ -73,7 +73,7 @@ class OrderControllerTest {
         cartRepository.save(cart);
 
         // Act - Login and get session
-        LoginRequestDto loginRequestDto = new LoginRequestDto();
+        LoginRequestDTO loginRequestDto = new LoginRequestDTO();
         loginRequestDto.setEmail(user.getEmail());
         loginRequestDto.setPassword(plainPassword);
 

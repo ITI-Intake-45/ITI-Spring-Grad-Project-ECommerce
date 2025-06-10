@@ -1,11 +1,15 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
+import gov.iti.jet.ewd.ecom.dto.CartDTO;
+import gov.iti.jet.ewd.ecom.dto.CartItemDTO;
 import gov.iti.jet.ewd.ecom.dto.OrderDto;
 import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.exception.OrderNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.OrderMapper;
 import gov.iti.jet.ewd.ecom.repository.CartRepository;
 import gov.iti.jet.ewd.ecom.repository.OrderRepository;
+import gov.iti.jet.ewd.ecom.repository.ProductRepository;
+import gov.iti.jet.ewd.ecom.repository.UserRepository;
 import gov.iti.jet.ewd.ecom.service.CartService;
 import gov.iti.jet.ewd.ecom.service.OrderService;
 import gov.iti.jet.ewd.ecom.util.CostCalculator;
@@ -13,9 +17,11 @@ import gov.iti.jet.ewd.ecom.util.DataValidator;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,79 +38,106 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final OrderMapper orderMapper;
     private final CartService cartService;
-
-    public OrderServiceImpl(OrderRepository orderRepository,
-                            CartRepository cartRepository,
-                            OrderMapper orderMapper,
-                            CartService cartService) {
-        this.orderRepository = orderRepository;
-        this.cartRepository = cartRepository;
-        this.orderMapper = orderMapper;
-        this.cartService = cartService;
-    }
-
-    @Override
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+    
+        public OrderServiceImpl(OrderRepository orderRepository,
+                                CartRepository cartRepository,
+                                OrderMapper orderMapper,
+                                CartService cartService,
+                                UserRepository userRepository,
+                                ProductRepository productRepository) {
+            this.orderRepository = orderRepository;
+            this.cartRepository = cartRepository;
+            this.orderMapper = orderMapper;
+            this.cartService = cartService;
+            this.userRepository = userRepository;
+            this.productRepository = productRepository;
+        }
+    
+        @Override
     @Transactional
     public String checkout(HttpSession session, int userId) {
         DataValidator.validateId(userId);
-
-        Cart userCart = cartRepository.findByCartId(userId);
-        if (userCart == null) {
-            throw new IllegalArgumentException("Cart not found for user ID: " + userId);
-        }
-        User user = userCart.getUser();
-
-        List<CartItem> cartItems = userCart.getItems();
-        if (cartItems.isEmpty()) {
+        
+        // Validate user is logged in
+        cartService.validateUserSession(session);
+        
+        // Get session cart instead of database cart
+        CartDTO sessionCart = cartService.getSessionCart(session);
+        if (sessionCart.getCartItems().isEmpty()) {
             throw new IllegalStateException("Cannot checkout with empty cart");
         }
-
-
-        double totalCost = CostCalculator.calculateTotalCost(cartItems);
-
+        
+        // Get user from database
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for ID: " + userId));
+        
+        // Calculate total cost from session cart
+        double totalCost = sessionCart.getTotalPrice();
+        
+        // Check user's credit balance
         if (totalCost > user.getCreditBalance()) {
-            throw new IllegalStateException("Insufficient credit balance");
+            throw new IllegalStateException("Insufficient credit balance. Required: " + totalCost + 
+                    ", Available: " + user.getCreditBalance());
         }
-
-        user.setCreditBalance(user.getCreditBalance() - totalCost);
-
-        cartItems.forEach(item -> {
-            Product product = item.getProduct();
-            int stock = product.getStock();
-            if (stock < item.getQuantity()) {
-                throw new IllegalStateException("Insufficient stock for product: " + item.getProduct().getName());
-            }
-            product.setStock(product.getStock() - item.getQuantity());
-        });
-
-        Order order = new Order();
-        order.setUser(user);
-        order.setTotalPrice(totalCost);
-        order.setStatus(OrderStatus.PENDING);
-
-        // Create OrderItems from CartItems
-        for (CartItem cartItem : cartItems) {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(cartItem.getProduct());
-            orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setItemPrice(cartItem.getProduct().getPrice());
-
-            order.getItems().add(orderItem);
+        
+        // Validate stock and prepare for order creation
+        List<Product> productsToUpdate = new ArrayList<>();
+        for (CartItemDTO cartItem : sessionCart.getCartItems()) {
+            Product product = productRepository.findById(cartItem.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found: " + cartItem.getProductId()));
+        
+        // Check stock availability
+        if (product.getStock() < cartItem.getQuantity()) {
+            throw new IllegalStateException("Insufficient stock for product: " + product.getName() +
+                    ". Available: " + product.getStock() + ", Required: " + cartItem.getQuantity());
         }
-
-        Order savedOrder = orderRepository.save(order);
-
-        // Clear cart items from database
-//        userCart.getItems().clear();
-//        cartRepository.save(userCart);
-
-        // Clear cart items from the session and also the database
-        cartService.clearCartAfterCheckout(session, userId);
-
-
-        return "Order #" + savedOrder.getOrderId() + " created successfully";
+        
+        productsToUpdate.add(product);
     }
+    
+    // All validations passed - proceed with checkout
+    
+    // Deduct credit balance
+    user.setCreditBalance(user.getCreditBalance() - totalCost);
+    userRepository.save(user);
+    
+    // Update product stock
+     for (int i = 0; i < sessionCart.getCartItems().size(); i++) {
+        CartItemDTO cartItem = sessionCart.getCartItems().get(i);
+        Product product = productsToUpdate.get(i);
+        product.setStock(product.getStock() - cartItem.getQuantity());
+        productRepository.save(product);
+    }
+    
+    // Create order
+    Order order = new Order();
+    order.setUser(user);
+    order.setTotalPrice(totalCost);
+    order.setStatus(OrderStatus.PENDING);
+    
+    // Create OrderItems from session cart items
+    for (CartItemDTO cartItem : sessionCart.getCartItems()) {
+        Product product = productRepository.findById(cartItem.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found: " + cartItem.getProductId()));
+        
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProduct(product);
+        orderItem.setQuantity(cartItem.getQuantity());
+        orderItem.setItemPrice(cartItem.getPrice()); // Use price from cart item
+        
+        order.getItems().add(orderItem);
+    }
+    
+    Order savedOrder = orderRepository.save(order);
+    
+    // Clear both session cart and database cart after successful checkout
+    cartService.clearCartAfterCheckout(session, userId);
+    
+    return "Order #" + savedOrder.getOrderId() + " created successfully";
+}
 
     public Page<OrderDto> getAllOrders(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findAllOrders(pageable);

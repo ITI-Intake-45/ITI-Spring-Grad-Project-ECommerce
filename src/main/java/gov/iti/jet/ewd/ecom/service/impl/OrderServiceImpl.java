@@ -1,13 +1,9 @@
 package gov.iti.jet.ewd.ecom.service.impl;
 
-<<<<<<< HEAD
 import gov.iti.jet.ewd.ecom.dto.CartDTO;
 import gov.iti.jet.ewd.ecom.dto.CartItemDTO;
-import gov.iti.jet.ewd.ecom.dto.OrderDto;
-=======
 import gov.iti.jet.ewd.ecom.dto.OrderDTO;
 import gov.iti.jet.ewd.ecom.dto.OrdersListStatsDTO;
->>>>>>> origin/development
 import gov.iti.jet.ewd.ecom.entity.*;
 import gov.iti.jet.ewd.ecom.exception.OrderNotFoundException;
 import gov.iti.jet.ewd.ecom.mapper.OrderMapper;

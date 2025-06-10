@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
    @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Apply CORS to all endpoints
-                .allowedOrigins("http://localhost:4200") // Allow requests from Angular frontend
+                .allowedOrigins("http://localhost:4200", "http://localhost:3200") // Allow requests from Angular frontend
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") // Include OPTIONS for preflight requests
                 .allowedHeaders("*") // Allow all headers
                 .allowCredentials(true); // Allow cookies/session (required for your session-based auth)

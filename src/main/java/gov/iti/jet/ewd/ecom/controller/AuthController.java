@@ -1,6 +1,6 @@
 package gov.iti.jet.ewd.ecom.controller;
 
-import gov.iti.jet.ewd.ecom.dto.LoginRequestDto;
+import gov.iti.jet.ewd.ecom.dto.LoginRequestDTO;
 import gov.iti.jet.ewd.ecom.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/admin/login")
-    public ResponseEntity<String> adminLogin(@RequestBody LoginRequestDto loginRequestDto,
+    public ResponseEntity<String> adminLogin(@RequestBody LoginRequestDTO loginRequestDto,
                                              HttpSession session) {
         boolean authenticated = authService.authenticateAdmin(
                 loginRequestDto.getEmail(),

@@ -1,13 +1,13 @@
 package gov.iti.jet.ewd.ecom.dto;
 
-public class CreditBalanceDto {
+public class CreditBalanceDTO {
     public double getBalance() {
         return creditBalance;
     }
     
-    public CreditBalanceDto(){}
+    public CreditBalanceDTO(){}
 
-    public CreditBalanceDto(double balance) {
+    public CreditBalanceDTO(double balance) {
         this.creditBalance = balance;
     }
 

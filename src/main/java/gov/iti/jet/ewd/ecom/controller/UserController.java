@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserDTO createUserDto) {
         User user = userMapper.createDtoToEntity(createUserDto);
         User savedUser = userService.createUser(user);
         return new ResponseEntity<>(userMapper.toDTO(savedUser), HttpStatus.CREATED);
@@ -41,9 +41,9 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        List<UserDto> userDTOs = users.stream()
+        List<UserDTO> userDTOs = users.stream()
                 .map(userMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(userDTOs);
@@ -51,17 +51,17 @@ public class UserController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> getUserById(@PathVariable int id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @PatchMapping("/change-balance")
-    public ResponseEntity<UserDto> updateBalance(
-            @RequestBody CreditBalanceDto creditBalanceDto,
+    public ResponseEntity<UserDTO> updateBalance(
+            @RequestBody CreditBalanceDTO creditBalanceDto,
             HttpSession session) {
 
-        UserDto userDto = (UserDto) session.getAttribute("user");
+        UserDTO userDto = (UserDTO) session.getAttribute("user");
 
         if (creditBalanceDto.getBalance() <= 0) {
             throw new IllegalArgumentException("Amount cannot be zero or less than zero!");
@@ -72,9 +72,9 @@ public class UserController {
 
     /******************* User Login API ************************/
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto,
+    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequestDto,
                                          HttpSession session) {
-        UserDto userDto = userService.login(loginRequestDto, session);
+        UserDTO userDto = userService.login(loginRequestDto, session);
         return ResponseEntity.ok(userDto);
     }
 
@@ -103,8 +103,8 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserDto> getUserProfile(HttpSession session) {
-        UserDto userDto = (UserDto) session.getAttribute("user");
+    public ResponseEntity<UserDTO> getUserProfile(HttpSession session) {
+        UserDTO userDto = (UserDTO) session.getAttribute("user");
         return ResponseEntity.ok(userDto);
     }
 
@@ -172,8 +172,8 @@ public class UserController {
     }
 
     @PatchMapping("/update-profile")
-    public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDto updatedUser, HttpSession session) {
-        UserDto currentUser = (UserDto) session.getAttribute("user");
+    public ResponseEntity<String> updateProfile(@RequestBody UpdateUserDTO updatedUser, HttpSession session) {
+        UserDTO currentUser = (UserDTO) session.getAttribute("user");
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
         }
@@ -202,14 +202,14 @@ public class UserController {
     public ResponseEntity<String> changePassword(
             @Valid
             @RequestBody
-            ChangePasswordDto changePasswordDto,
+            ChangePasswordDTO changePasswordDto,
             Authentication authentication,
             HttpSession session) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         }
 
-        UserDto currentUser = (UserDto) session.getAttribute("user");
+        UserDTO currentUser = (UserDTO) session.getAttribute("user");
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
         }

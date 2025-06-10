@@ -8,16 +8,15 @@ import lombok.Setter;
 
 import java.util.List;
 
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderDto {
+public class OrderDTO {
     private int orderId;
     private int userId;
     private String email;
     private OrderStatus status;
     private double totalPrice;
-    private List<OrderItemDto> items;
+    private List<OrderItemDTO> items;
 }

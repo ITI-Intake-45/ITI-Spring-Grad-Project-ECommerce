@@ -2,7 +2,7 @@ package gov.iti.jet.ewd.ecom.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class ChangePasswordDto {
+public class ChangePasswordDTO {
 
     @NotBlank(message = "Old password is required")
     private String oldPassword;

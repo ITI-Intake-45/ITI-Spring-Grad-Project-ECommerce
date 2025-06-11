@@ -230,7 +230,7 @@ public class CartServiceImpl implements CartService {
         System.out.println("Cart saved successfully with " + cart.getItems().size() + " items");
 
         // Clear session cart after saving
-        clearSessionCart(session);
+        //clearSessionCart(session);
     }
 
 
@@ -239,7 +239,10 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void clearCartAfterCheckout(HttpSession session, int userId) {
         // Clear session cart
-        session.removeAttribute(CART_SESSION_KEY);
+       //session.removeAttribute(CART_SESSION_KEY);
+       CartDTO sessionCart = getSessionCart(session);
+       sessionCart.setTotalPrice(0.0);
+       sessionCart.getCartItems().clear();
 
         // Clear database cart
         Cart cart = cartRepository.findById(userId).orElse(null);
@@ -265,7 +268,7 @@ public class CartServiceImpl implements CartService {
     public CartDTO createEmptyCart(int userId) {
         CartDTO cart = new CartDTO();
         cart.setUserId(userId);
-        cart.setCartId(0); // 0 indicates session cart, not saved to DB yet
+        cart.setCartId(userId); // 0 indicates session cart, not saved to DB yet
         return cart;
     }
 

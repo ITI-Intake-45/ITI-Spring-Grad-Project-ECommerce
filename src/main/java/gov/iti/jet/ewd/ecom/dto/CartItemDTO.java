@@ -31,7 +31,7 @@ public class CartItemDTO {
         this.productName = productName;
         this.price = price;
         this.quantity = quantity;
-        this.image = image;
+        this.image = imageUrl;
         this.cartItemId = 0; // 0 indicates it's not saved to database yet
     }
 

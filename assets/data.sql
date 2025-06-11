@@ -16,14 +16,14 @@ INSERT INTO users (
     credit_balance,
     phone
 ) VALUES
-(0, 'mounir@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Mounir Sabry', '123 Cairo St, Egypt', 500.0, '01011111111'),
-(0, 'ahmed@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Ahmed Hassan', '456 Giza Ave, Egypt', 200.0, '01122222222'),
-(0, 'hadeer@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Hadeer Adel', '789 Alexandria Blvd, Egypt', 100.0, '01233333333'),
-(0, 'lama@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Lama Khaled', '101 Beirut St, Lebanon', 300.0, '01544444444'),
-(0, 'kerollos@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Kerollos Samy', '202 Dubai Marina, UAE', 0.0, '01055555555'),
-(0, 'leena@email.com', '$2a$12$HFKRmoGUoe8/I4px/K3AquKQY//7pJPT1XGnrBG3fYa8cmi0jkIUK', 'Leena Almekkawy', '303 Riyadh Rd, Saudi Arabia', 150.0, '01266666666');
+(0, 'mounir@email.com', '$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Mounir Sabry', '123 Cairo St, Egypt', 500.0, '01011111111'),
+(0, 'ahmed@email.com', '$$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Ahmed Hassan', '456 Giza Ave, Egypt', 200.0, '01122222222'),
+(0, 'hadeer@email.com', '$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Hadeer Adel', '789 Alexandria Blvd, Egypt', 100.0, '01233333333'),
+(0, 'lama@email.com', '$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Lama Khaled', '101 Beirut St, Lebanon', 300.0, '01544444444'),
+(0, 'kerollos@email.com', '$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Kerollos Samy', '202 Dubai Marina, UAE', 0.0, '01055555555'),
+(0, 'leena@email.com', '$2a$10$eWCbEAHD22WdGhEm0oTdK.RjFVX7xhTe9d1Rmbt8TBVoQREd2vo46', 'Leena Almekkawy', '303 Riyadh Rd, Saudi Arabia', 150.0, '01266666666');
 
--- password is 'kero'
+-- password is '@sD12345'
 -- ----------------------------
 -- Step 2: Insert Product Categories
 -- ----------------------------

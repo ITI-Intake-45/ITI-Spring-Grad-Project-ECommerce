@@ -215,6 +215,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
+        userRepository.updateCreditBalance(order.getUser().getUserId(), order.getTotalPrice());
     }
 
 }

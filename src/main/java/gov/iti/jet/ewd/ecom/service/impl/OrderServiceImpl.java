@@ -164,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
         if (order.getStatus() == OrderStatus.ACCEPTED) {
-            throw new IllegalStateException("Order is already cancelled");
+            throw new IllegalStateException("Order is already accepted");
         }
 
         order.setStatus(OrderStatus.ACCEPTED);
